@@ -19,7 +19,6 @@ export const Sidebar = () => {
         bgcolor: '#FBFAFF',
         borderRight: 1,
         borderColor: '#FBFAFF',
-        zIndex: 1200,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
