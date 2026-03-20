@@ -1,6 +1,8 @@
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import type { ProjectTaskItem } from '../../entities/task';
 
@@ -21,6 +23,8 @@ type TaskBoardCardData = Pick<
 
 type TaskBoardCardProps = {
   task: TaskBoardCardData;
+  onAddSubtask?: (taskId: string) => void;
+  onOpen?: (taskId: string) => void;
 };
 
 const coverByType = {
@@ -29,7 +33,7 @@ const coverByType = {
   orange: 'linear-gradient(135deg, #F53844 0%, #FF7A1A 52%, #F4B845 100%)',
 };
 
-export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
+export const TaskBoardCard = ({ task, onAddSubtask, onOpen }: TaskBoardCardProps) => {
   const {
     id,
     title,
@@ -46,11 +50,21 @@ export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
 
   const checklistDoneCalculated = subtasks?.filter((subtask) => subtask.isDone).length;
   const checklistTotalCalculated = subtasks?.length;
-  const finalChecklistDone = typeof checklistDone === 'number' ? checklistDone : checklistDoneCalculated;
-  const finalChecklistTotal = typeof checklistTotal === 'number' ? checklistTotal : checklistTotalCalculated;
+  const hasSubtasks = Array.isArray(subtasks);
+  const finalChecklistDone = hasSubtasks ? checklistDoneCalculated : checklistDone;
+  const finalChecklistTotal = hasSubtasks ? checklistTotalCalculated : checklistTotal;
 
   return (
-    <Box sx={{ bgcolor: '#FFFFFF', borderRadius: 2.5, p: 2, width: '100%', boxSizing: 'border-box' }}>
+    <Box
+      onClick={() => onOpen?.(id)}
+      sx={{
+        bgcolor: '#FFFFFF',
+        borderRadius: 2.5,
+        p: 2,
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
       <Box
         sx={{
           display: 'inline-flex',
@@ -118,6 +132,24 @@ export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, color: '#6F7F99' }}>
+          {onAddSubtask && (
+            <IconButton
+              size="small"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAddSubtask(id);
+              }}
+              sx={{
+                width: 22,
+                height: 22,
+                color: '#6F7F99',
+              }}
+            >
+              <AddRoundedIcon sx={{ fontSize: 15 }} />
+            </IconButton>
+          )}
+
           {typeof finalChecklistTotal === 'number' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
               <CheckCircleOutlineRoundedIcon sx={{ fontSize: 16 }} />

@@ -5,9 +5,11 @@ import { TaskBoardCard } from '../shared/cards/TaskBoardCard';
 
 type DraggableTaskCardProps = {
   task: ProjectTaskItem;
+  onAddSubtask?: (taskId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 };
 
-export const DraggableTaskCard = ({ task }: DraggableTaskCardProps) => {
+export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask }: DraggableTaskCardProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -34,7 +36,15 @@ export const DraggableTaskCard = ({ task }: DraggableTaskCardProps) => {
         boxSizing: 'border-box',
       }}
     >
-      <TaskBoardCard task={task} />
+      <TaskBoardCard
+        task={task}
+        onAddSubtask={onAddSubtask}
+        onOpen={(taskId) => {
+          if (!isDragging) {
+            onOpenTask?.(taskId);
+          }
+        }}
+      />
     </Box>
   );
 };

@@ -12,9 +12,11 @@ type DroppableColumnProps = {
   columnId: ProjectTaskStatus;
   label: string;
   tasks: ProjectTaskItem[];
+  onAddSubtask?: (taskId: string) => void;
+  onOpenTask?: (taskId: string) => void;
 };
 
-export const DroppableColumn = ({ columnId, label, tasks }: DroppableColumnProps) => {
+export const DroppableColumn = ({ columnId, label, tasks, onAddSubtask, onOpenTask }: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: columnId,
   });
@@ -57,7 +59,9 @@ export const DroppableColumn = ({ columnId, label, tasks }: DroppableColumnProps
         }}
       >
         {tasks.length > 0 ? (
-          tasks.map((task) => <DraggableTaskCard key={task.id} task={task} />)
+          tasks.map((task) => (
+            <DraggableTaskCard key={task.id} task={task} onAddSubtask={onAddSubtask} onOpenTask={onOpenTask} />
+          ))
         ) : (
           <Box
             sx={{

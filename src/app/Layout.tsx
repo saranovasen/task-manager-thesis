@@ -17,7 +17,17 @@ export const Layout = ({ children }: { children?: ReactNode }) => {
   return (
     <Box className="app-layout" style={layoutVars}>
       <Sidebar />
-      <AppBar position="fixed" elevation={0} className="app-layout__bar">
+      <AppBar
+        position="fixed"
+        elevation={0}
+        className="app-layout__bar"
+        color="transparent"
+        sx={{
+          bgcolor: '#FFFFFF',
+          color: '#000000',
+          backgroundImage: 'none',
+        }}
+      >
         <Toolbar className="app-layout__toolbar">
           <Button color="inherit" className="app-layout__login">
             Login

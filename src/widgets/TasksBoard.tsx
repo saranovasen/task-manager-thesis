@@ -3,6 +3,7 @@ import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, cl
 import { useMemo, useState, useEffect } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
 import { DroppableColumn } from './DroppableColumn';
+import { TaskDetailsDialog } from './TaskDetailsDialog';
 
 const columnMeta: Array<{ key: ProjectTaskStatus; label: string }> = [
   { key: 'queue', label: 'Очередь' },
@@ -18,6 +19,7 @@ type TasksBoardProps = {
 
 export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   const [localTasks, setLocalTasks] = useState<ProjectTaskItem[]>(tasks);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalTasks(tasks);
@@ -73,6 +75,98 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     onTaskStatusChange?.(draggedTaskId, newStatus);
   };
 
+  const addSubtaskToTask = (task: ProjectTaskItem, title: string): ProjectTaskItem => {
+    const done = Math.max(0, task.checklistDone ?? 0);
+    const total = Math.max(done, task.checklistTotal ?? 0);
+
+    const fallbackSubtasks = Array.from({ length: total }, (_, index) => ({
+      id: `${task.id}-legacy-${index + 1}`,
+      title: `Подзадача ${index + 1}`,
+      isDone: index < done,
+    }));
+
+    const nextSubtasks = [
+      ...(task.subtasks ?? fallbackSubtasks),
+      {
+        id: `${task.id}-sub-${Date.now()}`,
+        title,
+        isDone: false,
+      },
+    ];
+
+    return {
+      ...task,
+      subtasks: nextSubtasks,
+      checklistDone: undefined,
+      checklistTotal: undefined,
+    };
+  };
+
+  const handleAddSubtask = (taskId: string) => {
+    const title = window.prompt('Введите название подзадачи');
+    if (!title || !title.trim()) {
+      return;
+    }
+
+    const subtaskTitle = title.trim();
+
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return addSubtaskToTask(task, subtaskTitle);
+      })
+    );
+  };
+
+  const handleAddSubtaskFromDialog = (taskId: string, title: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return addSubtaskToTask(task, title);
+      })
+    );
+  };
+
+  const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        const done = Math.max(0, task.checklistDone ?? 0);
+        const total = Math.max(done, task.checklistTotal ?? 0);
+        const fallbackSubtasks = Array.from({ length: total }, (_, index) => ({
+          id: `${task.id}-legacy-${index + 1}`,
+          title: `Подзадача ${index + 1}`,
+          isDone: index < done,
+        }));
+
+        const sourceSubtasks = task.subtasks ?? fallbackSubtasks;
+
+        return {
+          ...task,
+          subtasks: sourceSubtasks.map((subtask) =>
+            subtask.id === subtaskId ? { ...subtask, isDone: !subtask.isDone } : subtask
+          ),
+          checklistDone: undefined,
+          checklistTotal: undefined,
+        };
+      })
+    );
+  };
+
+  const selectedTask = useMemo(
+    () => localTasks.find((task) => task.id === selectedTaskId) ?? null,
+    [localTasks, selectedTaskId]
+  );
+
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
       <Box
@@ -91,9 +185,19 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
             columnId={column.key}
             label={column.label}
             tasks={tasksByStatus[column.key]}
+            onAddSubtask={handleAddSubtask}
+            onOpenTask={setSelectedTaskId}
           />
         ))}
       </Box>
+
+      <TaskDetailsDialog
+        open={Boolean(selectedTaskId)}
+        task={selectedTask}
+        onClose={() => setSelectedTaskId(null)}
+        onAddSubtask={handleAddSubtaskFromDialog}
+        onToggleSubtask={handleToggleSubtask}
+      />
     </DndContext>
   );
 };
