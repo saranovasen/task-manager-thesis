@@ -1,32 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { useMemo, useState } from 'react';
-
-type Period = 'day' | 'week' | 'month';
-
-type DynamicsDataset = {
-  labels: string[];
-  purple: number[];
-  blue: number[];
-};
-
-const mockDynamics: Record<Period, DynamicsDataset> = {
-  day: {
-    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
-    purple: [20, 35, 110, 170, 140, 190, 120],
-    blue: [15, 30, 80, 120, 90, 145, 100],
-  },
-  week: {
-    labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-    purple: [160, 220, 190, 280, 310, 240, 200],
-    blue: [120, 170, 140, 210, 190, 160, 130],
-  },
-  month: {
-    labels: ['Май', 'Июнь', 'Июль', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек', 'Янв', 'Фев', 'Март', 'Апр'],
-    purple: [90, 120, 110, 380, 260, 170, 220, 130, 175, 325, 285, 160],
-    blue: [50, 200, 230, 305, 190, 225, 35, 55, 65, 70, 155, 120],
-  },
-};
+import { useMemo } from 'react';
+import { useFinishedTasksDynamics, type TaskPeriod } from '../entities/task';
 
 const svgWidth = 1200;
 const svgHeight = 420;
@@ -84,8 +59,7 @@ const areaPath = (points: { x: number; y: number }[]) => {
 };
 
 export const FinishedTasks = () => {
-  const [period, setPeriod] = useState<Period>('month');
-  const activeDataset = mockDynamics[period];
+  const { period, setPeriod, dynamics: activeDataset } = useFinishedTasksDynamics();
 
   const yMax = useMemo(() => {
     const max = Math.max(...activeDataset.purple, ...activeDataset.blue, 100);
@@ -132,9 +106,9 @@ export const FinishedTasks = () => {
 
         <Box sx={{ display: 'flex', gap: 6 }}>
           {[
-            { key: 'day' as const, label: 'День' },
-            { key: 'week' as const, label: 'Неделя' },
-            { key: 'month' as const, label: 'Месяц' },
+            { key: 'day' as TaskPeriod, label: 'День' },
+            { key: 'week' as TaskPeriod, label: 'Неделя' },
+            { key: 'month' as TaskPeriod, label: 'Месяц' },
           ].map((tab) => {
             const isActive = period === tab.key;
 
