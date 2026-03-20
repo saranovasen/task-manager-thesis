@@ -6,7 +6,7 @@ import { CreateProjectButton } from '../features/create-project';
 import { ProjectCard } from '../shared/cards/ProjectCard';
 
 export const Projects = () => {
-  const { projects, addProject } = useProjects();
+  const { projects, addProject, removeProject } = useProjects();
   const navigate = useNavigate();
 
   return (
@@ -18,16 +18,20 @@ export const Projects = () => {
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         {projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            title={project.title}
-            link={project.link}
-            tasks={project.tasks}
-            dueDate={project.dueDate}
-            progress={project.progress}
-            progressColor={project.progressColor}
-            onClick={() => navigate(`/projects/${project.id}/tasks`, { state: { project } })}
-          />
+          <Box key={project.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ flex: 1 }}>
+              <ProjectCard
+                title={project.title}
+                link={project.link}
+                tasks={project.tasks}
+                dueDate={project.dueDate}
+                progress={project.progress}
+                progressColor={project.progressColor}
+                onClick={() => navigate(`/projects/${project.id}/tasks`, { state: { project } })}
+                onDeleteClick={() => removeProject(project.id)}
+              />
+            </Box>
+          </Box>
         ))}
       </Box>
     </Box>

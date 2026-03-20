@@ -1,4 +1,5 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import {
   Box,
   Button,
@@ -7,9 +8,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Stack,
   TextField,
@@ -17,6 +18,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
+import { ConfirmDeleteDialog } from '../shared/dialogs';
 
 const statusLabelByKey: Record<ProjectTaskStatus, string> = {
   queue: 'Очередь',
@@ -32,6 +34,8 @@ type TaskDetailsDialogProps = {
   onAddSubtask: (taskId: string, title: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
   onChangeDeadline: (taskId: string, nextDate: string) => void;
+  onDeleteSubtask: (taskId: string, subtaskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
 };
 
 export const TaskDetailsDialog = ({
@@ -41,10 +45,17 @@ export const TaskDetailsDialog = ({
   onAddSubtask,
   onToggleSubtask,
   onChangeDeadline,
+  onDeleteSubtask,
+  onDeleteTask,
 }: TaskDetailsDialogProps) => {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [deadlineValue, setDeadlineValue] = useState('');
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [deleteSubtaskDialogOpen, setDeleteSubtaskDialogOpen] = useState(false);
+  const [subtaskToDelete, setSubtaskToDelete] = useState<{ taskId: string; subtaskId: string; title: string } | null>(
+    null
+  );
+  const [deleteTaskDialogOpen, setDeleteTaskDialogOpen] = useState(false);
 
   const formatDisplayDate = (value?: string) => {
     if (!value || value === 'Срок не указан') {
@@ -288,6 +299,9 @@ export const TaskDetailsDialog = ({
                   px: 1,
                   py: 0.6,
                   borderRadius: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   '&:not(:last-child)': {
                     mb: 0.4,
                   },
@@ -296,7 +310,7 @@ export const TaskDetailsDialog = ({
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                   <Checkbox
                     checked={subtask.isDone}
                     onChange={() => onToggleSubtask(task.id, subtask.id)}
@@ -308,18 +322,36 @@ export const TaskDetailsDialog = ({
                       },
                     }}
                   />
-                </ListItemIcon>
-                <ListItemText
-                  primary={subtask.title}
-                  primaryTypographyProps={{
-                    sx: {
-                      color: '#1F2564',
-                      textDecoration: subtask.isDone ? 'line-through' : 'none',
-                      opacity: subtask.isDone ? 0.6 : 1,
-                      fontSize: 14,
-                    },
+                  <ListItemText
+                    primary={subtask.title}
+                    primaryTypographyProps={{
+                      sx: {
+                        color: '#1F2564',
+                        textDecoration: subtask.isDone ? 'line-through' : 'none',
+                        opacity: subtask.isDone ? 0.6 : 1,
+                        fontSize: 14,
+                      },
+                    }}
+                  />
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSubtaskToDelete({
+                      taskId: task.id,
+                      subtaskId: subtask.id,
+                      title: subtask.title,
+                    });
+                    setDeleteSubtaskDialogOpen(true);
                   }}
-                />
+                  sx={{
+                    p: 0.5,
+                    color: '#FF5757',
+                  }}
+                >
+                  <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
               </ListItem>
             ))}
 
@@ -330,11 +362,67 @@ export const TaskDetailsDialog = ({
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1.5 }}>
+      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1.5, justifyContent: 'space-between' }}>
+        <Button
+          onClick={() => setDeleteTaskDialogOpen(true)}
+          variant="contained"
+          sx={{
+            minWidth: 129,
+            height: 39,
+            borderRadius: 2.5,
+            textTransform: 'none',
+            fontSize: 14,
+            fontWeight: 600,
+            bgcolor: '#FF5757',
+            color: '#FFFFFF',
+            boxShadow: 'none',
+            '&:hover': {
+              bgcolor: '#E74545',
+              boxShadow: 'none',
+            },
+          }}
+        >
+          Удалить
+        </Button>
         <Button onClick={onClose} variant="contained" sx={secondaryButtonSx}>
           Закрыть
         </Button>
       </DialogActions>
+
+      <ConfirmDeleteDialog
+        open={deleteTaskDialogOpen}
+        title="Удалить задачу?"
+        message={`Вы уверены, что хотите удалить задачу "${task?.title}"? Это действие невозможно отменить.`}
+        confirmButtonText="Удалить"
+        cancelButtonText="Отмена"
+        onConfirm={() => {
+          if (task) {
+            onDeleteTask(task.id);
+            onClose();
+          }
+          setDeleteTaskDialogOpen(false);
+        }}
+        onCancel={() => setDeleteTaskDialogOpen(false)}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteSubtaskDialogOpen}
+        title="Удалить подзадачу?"
+        message={`Вы уверены, что хотите удалить подзадачу "${subtaskToDelete?.title}"?`}
+        confirmButtonText="Удалить"
+        cancelButtonText="Отмена"
+        onConfirm={() => {
+          if (subtaskToDelete) {
+            onDeleteSubtask(subtaskToDelete.taskId, subtaskToDelete.subtaskId);
+          }
+          setDeleteSubtaskDialogOpen(false);
+          setSubtaskToDelete(null);
+        }}
+        onCancel={() => {
+          setDeleteSubtaskDialogOpen(false);
+          setSubtaskToDelete(null);
+        }}
+      />
     </Dialog>
   );
 };

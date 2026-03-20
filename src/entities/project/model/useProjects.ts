@@ -28,5 +28,9 @@ export const useProjects = () => {
     setProjects((prevProjects) => [project, ...prevProjects]);
   };
 
-  return { projects, addProject };
+  const removeProject = (projectId: string) => {
+    setProjects((prevProjects) => prevProjects.filter((p) => p.id !== projectId));
+  };
+
+  return { projects, addProject, removeProject };
 };

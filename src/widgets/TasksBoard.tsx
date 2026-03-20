@@ -218,6 +218,40 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     );
   };
 
+  const handleDeleteTask = (taskId: string) => {
+    setLocalTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+    if (selectedTaskId === taskId) {
+      setSelectedTaskId(null);
+    }
+  };
+
+  const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        const done = Math.max(0, task.checklistDone ?? 0);
+        const total = Math.max(done, task.checklistTotal ?? 0);
+        const fallbackSubtasks = Array.from({ length: total }, (_, index) => ({
+          id: `${task.id}-legacy-${index + 1}`,
+          title: `Подзадача ${index + 1}`,
+          isDone: index < done,
+        }));
+
+        const sourceSubtasks = task.subtasks ?? fallbackSubtasks;
+
+        return {
+          ...task,
+          subtasks: sourceSubtasks.filter((subtask) => subtask.id !== subtaskId),
+          checklistDone: undefined,
+          checklistTotal: undefined,
+        };
+      })
+    );
+  };
+
   const selectedTask = useMemo(
     () => localTasks.find((task) => task.id === selectedTaskId) ?? null,
     [localTasks, selectedTaskId]
@@ -261,6 +295,8 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         onAddSubtask={handleAddSubtaskFromDialog}
         onToggleSubtask={handleToggleSubtask}
         onChangeDeadline={handleEditDeadline}
+        onDeleteSubtask={handleDeleteSubtask}
+        onDeleteTask={handleDeleteTask}
       />
 
       <CreateTaskDialog
