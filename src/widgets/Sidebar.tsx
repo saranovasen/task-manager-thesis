@@ -2,11 +2,12 @@ import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
+import { useNavigate } from 'react-router-dom';
 import { dashboardIcon } from '../shared/icons/dashboardIcon';
-import { tasksIcon } from '../shared/icons/tasksIcon';
 
 export const Sidebar = () => {
-  const items = [dashboardIcon, tasksIcon];
+  const navigate = useNavigate();
+  const items = [{ icon: dashboardIcon, path: '/' }];
 
   return (
     <Box
@@ -34,9 +35,10 @@ export const Sidebar = () => {
           paddingTop: '30vh',
         }}
       >
-        {items.map((Icon, index) => (
+        {items.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ justifyContent: 'center', mb: 1, width: '100%' }}>
             <ListItemButton
+              onClick={() => navigate(item.path)}
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
@@ -52,7 +54,7 @@ export const Sidebar = () => {
                 },
               }}
             >
-              {Icon()}
+              {item.icon()}
             </ListItemButton>
           </ListItem>
         ))}
