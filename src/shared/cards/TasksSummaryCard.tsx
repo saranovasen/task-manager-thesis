@@ -3,6 +3,18 @@ import { SecondaryText } from '../typography/SecondaryText';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import { useId } from 'react';
+import {
+  tasksSummaryCardAmountSx,
+  tasksSummaryCardAreaSvgSx,
+  tasksSummaryCardChartWrapperSx,
+  tasksSummaryCardDividerSx,
+  tasksSummaryCardLineSvgSx,
+  tasksSummaryCardRootSx,
+  tasksSummaryCardRowSx,
+  tasksSummaryCardRowWithGapSx,
+  tasksSummaryCardTrendAmountSx,
+  tasksSummaryCardTrendInfoSx,
+} from './TasksSummaryCard.styles';
 
 type TaskSummaryCard = {
   icon: React.ReactNode;
@@ -56,35 +68,26 @@ export const TaskSummaryCard = (props: TaskSummaryCard) => {
   const areaPath = points.length > 1 ? `${linePath} L ${points[points.length - 1].x} 48 L ${points[0].x} 48 Z` : '';
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        width: '100%',
-        flexDirection: 'column',
-        padding: 2,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 4,
-        gap: 2,
-      }}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+    <Box sx={tasksSummaryCardRootSx}>
+      <Box sx={tasksSummaryCardRowSx}>
+        <Box sx={tasksSummaryCardRowWithGapSx}>
           {props.icon}
           <SecondaryText text={props.title} />
         </Box>
-        <Typography sx={{ color: '#1E1E1E' }}>{props.amount}</Typography>
+        <Typography sx={tasksSummaryCardAmountSx}>{props.amount}</Typography>
       </Box>
 
-      <Divider sx={{ my: 1, borderColor: '#E6EAF0' }} />
+      <Divider sx={tasksSummaryCardDividerSx} />
 
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ position: 'relative', width: 115, height: 56, mb: 1, overflow: 'visible' }}>
-          <svg
+      <Box sx={tasksSummaryCardRowSx}>
+        <Box sx={tasksSummaryCardChartWrapperSx}>
+          <Box
+            component="svg"
             width="115"
             height="56"
             viewBox="0 0 100 56"
             preserveAspectRatio="none"
-            style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
+            sx={tasksSummaryCardAreaSvgSx}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -97,15 +100,22 @@ export const TaskSummaryCard = (props: TaskSummaryCard) => {
             </defs>
 
             <path d={areaPath} fill={`url(#${gradientId})`} filter={`url(#${blurId})`} opacity="0.9" />
-          </svg>
+          </Box>
 
-          <svg width="115" height="56" viewBox="0 0 100 56" preserveAspectRatio="none" style={{ position: 'relative' }}>
+          <Box
+            component="svg"
+            width="115"
+            height="56"
+            viewBox="0 0 100 56"
+            preserveAspectRatio="none"
+            sx={tasksSummaryCardLineSvgSx}
+          >
             <path d={linePath} fill="none" stroke={props.lineColor} strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <Typography sx={{ color: '#299702' }}>{props.amount}+</Typography>
+        <Box sx={tasksSummaryCardTrendInfoSx}>
+          <Typography sx={tasksSummaryCardTrendAmountSx}>{props.amount}+</Typography>
           <SecondaryText text={'с прошлой'} />
           <SecondaryText text={'недели'} />
         </Box>

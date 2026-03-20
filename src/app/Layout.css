@@ -1,0 +1,34 @@
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app-layout__bar {
+  position: fixed;
+  left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  background-color: #ffffff;
+}
+
+.app-layout__toolbar {
+  height: 76px;
+  justify-content: flex-end;
+}
+
+.app-layout__login {
+  color: #000000;
+}
+
+.app-layout__main {
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width) - var(--assistant-width));
+}
+
+.app-layout__offset {
+  height: 76px;
+}
+
+.app-layout__content {
+  width: 100%;
+  padding: 24px 12px;
+}

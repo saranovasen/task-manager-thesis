@@ -2,6 +2,16 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useMemo } from 'react';
 import { useFinishedTasksDynamics, type TaskPeriod } from '../entities/task';
+import {
+  finishedTasksChartContainerSx,
+  finishedTasksChartSvgSx,
+  finishedTasksHeaderSx,
+  finishedTasksRootSx,
+  finishedTasksTabLabelSx,
+  finishedTasksTabSx,
+  finishedTasksTabsSx,
+  finishedTasksTitleSx,
+} from './FinishedTasks.styles';
 
 const svgWidth = 1200;
 const svgHeight = 420;
@@ -86,25 +96,11 @@ export const FinishedTasks = () => {
   const mapY = (value: number) => topPadding + ((yMax - value) / yMax) * chartHeight;
 
   return (
-    <Box
-      sx={{
-        mt: 3,
-        p: 3,
-        bgcolor: '#FFFFFF',
-        borderRadius: 4,
-        width: '100%',
-        maxWidth: 'none',
-        minWidth: 0,
-        boxSizing: 'border-box',
-        alignSelf: 'stretch',
-      }}
-    >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-        <Typography sx={{ color: '#232360', fontSize: 24, fontWeight: 600, lineHeight: 1.1 }}>
-          Завершенные задачи
-        </Typography>
+    <Box sx={finishedTasksRootSx}>
+      <Box sx={finishedTasksHeaderSx}>
+        <Typography sx={finishedTasksTitleSx}>Завершенные задачи</Typography>
 
-        <Box sx={{ display: 'flex', gap: 6 }}>
+        <Box sx={finishedTasksTabsSx}>
           {[
             { key: 'day' as TaskPeriod, label: 'День' },
             { key: 'week' as TaskPeriod, label: 'Неделя' },
@@ -113,39 +109,22 @@ export const FinishedTasks = () => {
             const isActive = period === tab.key;
 
             return (
-              <Box
-                key={tab.key}
-                onClick={() => setPeriod(tab.key)}
-                sx={{
-                  borderBottom: isActive ? '4px solid #2F9CF4' : '4px solid transparent',
-                  pb: 1,
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                }}
-              >
-                <Typography
-                  sx={{
-                    color: isActive ? '#2F9CF4' : '#232360',
-                    fontSize: 16,
-                    fontWeight: 500,
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {tab.label}
-                </Typography>
+              <Box key={tab.key} onClick={() => setPeriod(tab.key)} sx={finishedTasksTabSx(isActive)}>
+                <Typography sx={finishedTasksTabLabelSx(isActive)}>{tab.label}</Typography>
               </Box>
             );
           })}
         </Box>
       </Box>
 
-      <Box sx={{ width: '100%', minWidth: 0 }}>
-        <svg
+      <Box sx={finishedTasksChartContainerSx}>
+        <Box
+          component="svg"
           width="100%"
           height="auto"
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ display: 'block', width: '100%', maxWidth: '100%' }}
+          sx={finishedTasksChartSvgSx}
         >
           <defs>
             <linearGradient id="purpleArea" x1="0" y1="0" x2="0" y2="1">
@@ -207,7 +186,7 @@ export const FinishedTasks = () => {
               </text>
             );
           })}
-        </svg>
+        </Box>
       </Box>
     </Box>
   );
