@@ -1,11 +1,13 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../entities/project';
 import { CreateProjectButton } from '../features/create-project';
 import { ProjectCard } from '../shared/cards/ProjectCard';
 
 export const Projects = () => {
   const { projects, addProject } = useProjects();
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ mt: 3, width: '100%' }}>
@@ -24,6 +26,7 @@ export const Projects = () => {
             dueDate={project.dueDate}
             progress={project.progress}
             progressColor={project.progressColor}
+            onClick={() => navigate(`/projects/${project.id}/tasks`, { state: { project } })}
           />
         ))}
       </Box>

@@ -14,6 +14,7 @@ type ProjectCardProps = {
   dueDate: string;
   progress: number;
   progressColor: string;
+  onClick?: () => void;
   onRemindClick?: () => void;
 };
 
@@ -24,10 +25,12 @@ export const ProjectCard = ({
   dueDate,
   progress,
   progressColor,
+  onClick,
   onRemindClick,
 }: ProjectCardProps) => {
   return (
     <Box
+      onClick={onClick}
       sx={{
         bgcolor: '#FFFFFF',
         borderRadius: 3,
@@ -36,6 +39,7 @@ export const ProjectCard = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 3,
+        cursor: onClick ? 'pointer' : 'default',
       }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -83,7 +87,10 @@ export const ProjectCard = ({
       <Button
         variant="contained"
         startIcon={<AlarmRoundedIcon />}
-        onClick={onRemindClick}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRemindClick?.();
+        }}
         sx={{
           minWidth: 129,
           height: 39,
