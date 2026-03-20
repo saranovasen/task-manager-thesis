@@ -15,7 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
 
 const statusLabelByKey: Record<ProjectTaskStatus, string> = {
@@ -31,10 +31,61 @@ type TaskDetailsDialogProps = {
   onClose: () => void;
   onAddSubtask: (taskId: string, title: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
+  onChangeDeadline: (taskId: string, nextDate: string) => void;
 };
 
-export const TaskDetailsDialog = ({ task, open, onClose, onAddSubtask, onToggleSubtask }: TaskDetailsDialogProps) => {
+export const TaskDetailsDialog = ({
+  task,
+  open,
+  onClose,
+  onAddSubtask,
+  onToggleSubtask,
+  onChangeDeadline,
+}: TaskDetailsDialogProps) => {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [deadlineValue, setDeadlineValue] = useState('');
+  const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+
+  const formatDisplayDate = (value?: string) => {
+    if (!value || value === 'Срок не указан') {
+      return value ?? 'Срок не указан';
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    const monthRaw = parsed.toLocaleString('ru-RU', { month: 'short' }).replace('.', '');
+    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const year = parsed.getFullYear();
+
+    return `${month} ${day}, ${year}`;
+  };
+
+  const toInputDate = (value?: string) => {
+    if (!value || value === 'Срок не указан') {
+      return '';
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return '';
+    }
+
+    return parsed.toISOString().slice(0, 10);
+  };
+
+  useEffect(() => {
+    setDeadlineValue(toInputDate(task?.dateLabel));
+  }, [task?.id, task?.dateLabel]);
+
+  useEffect(() => {
+    if (!open) {
+      setIsEditingDeadline(false);
+    }
+  }, [open]);
 
   const primaryButtonSx = {
     minWidth: 129,
@@ -87,6 +138,16 @@ export const TaskDetailsDialog = ({ task, open, onClose, onAddSubtask, onToggleS
     setNewSubtaskTitle('');
   };
 
+  const submitDeadline = () => {
+    if (!task) {
+      setIsEditingDeadline(false);
+      return;
+    }
+
+    onChangeDeadline(task.id, deadlineValue);
+    setIsEditingDeadline(false);
+  };
+
   return (
     <Dialog
       open={open}
@@ -122,19 +183,73 @@ export const TaskDetailsDialog = ({ task, open, onClose, onAddSubtask, onToggleS
               </Typography>
             </Box>
 
-            <Box
-              sx={{
-                display: 'inline-flex',
-                px: 1,
-                py: 0.4,
-                border: '1px solid #D7DDE8',
-                borderRadius: 1,
-              }}
-            >
-              <Typography sx={{ color: '#6F7F99', fontSize: 13, fontWeight: 500 }}>
-                {task?.dateLabel ? `Срок: ${task.dateLabel}` : 'Срок: -'}
-              </Typography>
-            </Box>
+            {isEditingDeadline ? (
+              <TextField
+                type="date"
+                value={deadlineValue}
+                onChange={(event) => setDeadlineValue(event.target.value)}
+                onBlur={submitDeadline}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitDeadline();
+                  }
+
+                  if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setDeadlineValue(toInputDate(task?.dateLabel));
+                    setIsEditingDeadline(false);
+                  }
+                }}
+                autoFocus
+                sx={{
+                  minWidth: 165,
+                  '& .MuiOutlinedInput-root': {
+                    height: 29,
+                    borderRadius: 1,
+                    px: 1,
+                    color: '#1F2564',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    '& fieldset': {
+                      borderColor: '#D7DDE8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#C8D0E0',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#5051F9',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    p: 0,
+                    color: '#1F2564',
+                    fontSize: 13,
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            ) : (
+              <Box
+                onClick={() => setIsEditingDeadline(true)}
+                sx={{
+                  display: 'inline-flex',
+                  px: 1,
+                  py: 0.4,
+                  border: '1px solid #D7DDE8',
+                  borderRadius: 1,
+                  color: '#1F2564',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: '#F7F8FF',
+                  },
+                }}
+              >
+                Срок: {task?.dateLabel ? formatDisplayDate(task.dateLabel) : '-'}
+              </Box>
+            )}
           </Box>
 
           <Typography sx={{ color: '#232360', fontSize: 18, fontWeight: 600 }}>Подзадачи</Typography>

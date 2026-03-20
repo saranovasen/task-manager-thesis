@@ -2,7 +2,9 @@ import Box from '@mui/material/Box';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, closestCorners } from '@dnd-kit/core';
 import { useMemo, useState, useEffect } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
-import { DroppableColumn } from './DroppableColumn';
+import { createSubtask, CreateSubtaskDialog } from '../features/create-subtask';
+import { createTask, CreateTaskDialog, type CreateTaskPayload } from '../features/create-task';
+import { DroppableColumn } from '../features/drag-and-drop';
 import { TaskDetailsDialog } from './TaskDetailsDialog';
 
 const columnMeta: Array<{ key: ProjectTaskStatus; label: string }> = [
@@ -20,6 +22,16 @@ type TasksBoardProps = {
 export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   const [localTasks, setLocalTasks] = useState<ProjectTaskItem[]>(tasks);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [createTaskStatus, setCreateTaskStatus] = useState<ProjectTaskStatus>('queue');
+  const [createSubtaskTaskId, setCreateSubtaskTaskId] = useState<string | null>(null);
+
+  const formatDateLabel = (value: Date) =>
+    value.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
 
   useEffect(() => {
     setLocalTasks(tasks);
@@ -75,6 +87,24 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     onTaskStatusChange?.(draggedTaskId, newStatus);
   };
 
+  const handleAddTask = (status: ProjectTaskStatus) => {
+    setCreateTaskStatus(status);
+    setIsCreateTaskOpen(true);
+  };
+
+  const handleCreateTask = (payload: CreateTaskPayload) => {
+    const baseTask = localTasks[0];
+
+    const newTask: ProjectTaskItem = createTask({
+      projectId: baseTask?.projectId ?? '1',
+      payload,
+    });
+
+    setLocalTasks((prev) => [newTask, ...prev]);
+    setIsCreateTaskOpen(false);
+    setSelectedTaskId(newTask.id);
+  };
+
   const addSubtaskToTask = (task: ProjectTaskItem, title: string): ProjectTaskItem => {
     const done = Math.max(0, task.checklistDone ?? 0);
     const total = Math.max(done, task.checklistTotal ?? 0);
@@ -87,11 +117,7 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
 
     const nextSubtasks = [
       ...(task.subtasks ?? fallbackSubtasks),
-      {
-        id: `${task.id}-sub-${Date.now()}`,
-        title,
-        isDone: false,
-      },
+      createSubtask({ taskId: task.id, payload: { title } }),
     ];
 
     return {
@@ -103,22 +129,25 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   };
 
   const handleAddSubtask = (taskId: string) => {
-    const title = window.prompt('Введите название подзадачи');
-    if (!title || !title.trim()) {
+    setCreateSubtaskTaskId(taskId);
+  };
+
+  const handleCreateSubtask = (title: string) => {
+    if (!createSubtaskTaskId) {
       return;
     }
 
-    const subtaskTitle = title.trim();
-
     setLocalTasks((prevTasks) =>
       prevTasks.map((task) => {
-        if (task.id !== taskId) {
+        if (task.id !== createSubtaskTaskId) {
           return task;
         }
 
-        return addSubtaskToTask(task, subtaskTitle);
+        return addSubtaskToTask(task, title);
       })
     );
+
+    setCreateSubtaskTaskId(null);
   };
 
   const handleAddSubtaskFromDialog = (taskId: string, title: string) => {
@@ -162,9 +191,41 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     );
   };
 
+  const handleEditDeadline = (taskId: string, nextDate: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        if (!nextDate) {
+          return {
+            ...task,
+            dateLabel: 'Срок не указан',
+          };
+        }
+
+        const parsed = new Date(nextDate);
+        if (Number.isNaN(parsed.getTime())) {
+          return task;
+        }
+
+        return {
+          ...task,
+          dateLabel: formatDateLabel(parsed),
+        };
+      })
+    );
+  };
+
   const selectedTask = useMemo(
     () => localTasks.find((task) => task.id === selectedTaskId) ?? null,
     [localTasks, selectedTaskId]
+  );
+
+  const createSubtaskTask = useMemo(
+    () => localTasks.find((task) => task.id === createSubtaskTaskId) ?? null,
+    [localTasks, createSubtaskTaskId]
   );
 
   return (
@@ -185,8 +246,10 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
             columnId={column.key}
             label={column.label}
             tasks={tasksByStatus[column.key]}
+            onAddTask={handleAddTask}
             onAddSubtask={handleAddSubtask}
             onOpenTask={setSelectedTaskId}
+            onEditDeadline={handleEditDeadline}
           />
         ))}
       </Box>
@@ -197,6 +260,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         onClose={() => setSelectedTaskId(null)}
         onAddSubtask={handleAddSubtaskFromDialog}
         onToggleSubtask={handleToggleSubtask}
+        onChangeDeadline={handleEditDeadline}
+      />
+
+      <CreateTaskDialog
+        open={isCreateTaskOpen}
+        status={createTaskStatus}
+        onClose={() => setIsCreateTaskOpen(false)}
+        onCreate={handleCreateTask}
+      />
+
+      <CreateSubtaskDialog
+        open={Boolean(createSubtaskTaskId)}
+        taskTitle={createSubtaskTask?.title}
+        onClose={() => setCreateSubtaskTaskId(null)}
+        onCreate={(payload) => handleCreateSubtask(payload.title)}
       />
     </DndContext>
   );

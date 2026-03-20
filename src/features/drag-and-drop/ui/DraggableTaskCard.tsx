@@ -1,15 +1,16 @@
 import Box from '@mui/material/Box';
 import { useDraggable } from '@dnd-kit/core';
-import type { ProjectTaskItem } from '../entities/task';
-import { TaskBoardCard } from '../shared/cards/TaskBoardCard';
+import type { ProjectTaskItem } from '../../../entities/task';
+import { TaskBoardCard } from '../../../shared/cards/TaskBoardCard';
 
 type DraggableTaskCardProps = {
   task: ProjectTaskItem;
   onAddSubtask?: (taskId: string) => void;
   onOpenTask?: (taskId: string) => void;
+  onEditDeadline?: (taskId: string, nextDate: string) => void;
 };
 
-export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask }: DraggableTaskCardProps) => {
+export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask, onEditDeadline }: DraggableTaskCardProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -39,6 +40,7 @@ export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask }: DraggableT
       <TaskBoardCard
         task={task}
         onAddSubtask={onAddSubtask}
+        onEditDeadline={onEditDeadline}
         onOpen={(taskId) => {
           if (!isDragging) {
             onOpenTask?.(taskId);

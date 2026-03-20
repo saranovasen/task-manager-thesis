@@ -5,18 +5,28 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useDroppable } from '@dnd-kit/core';
-import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
+import type { ProjectTaskItem, ProjectTaskStatus } from '../../../entities/task';
 import { DraggableTaskCard } from './DraggableTaskCard';
 
 type DroppableColumnProps = {
   columnId: ProjectTaskStatus;
   label: string;
   tasks: ProjectTaskItem[];
+  onAddTask?: (status: ProjectTaskStatus) => void;
   onAddSubtask?: (taskId: string) => void;
   onOpenTask?: (taskId: string) => void;
+  onEditDeadline?: (taskId: string, nextDate: string) => void;
 };
 
-export const DroppableColumn = ({ columnId, label, tasks, onAddSubtask, onOpenTask }: DroppableColumnProps) => {
+export const DroppableColumn = ({
+  columnId,
+  label,
+  tasks,
+  onAddTask,
+  onAddSubtask,
+  onOpenTask,
+  onEditDeadline,
+}: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: columnId,
   });
@@ -40,7 +50,11 @@ export const DroppableColumn = ({ columnId, label, tasks, onAddSubtask, onOpenTa
           <IconButton size="small" sx={{ color: '#6F7F99' }}>
             <MoreHorizRoundedIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" sx={{ bgcolor: '#E9EBFE', color: '#5051F9', '&:hover': { bgcolor: '#DBDFFC' } }}>
+          <IconButton
+            size="small"
+            onClick={() => onAddTask?.(columnId)}
+            sx={{ bgcolor: '#E9EBFE', color: '#5051F9', '&:hover': { bgcolor: '#DBDFFC' } }}
+          >
             <AddRoundedIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -60,7 +74,13 @@ export const DroppableColumn = ({ columnId, label, tasks, onAddSubtask, onOpenTa
       >
         {tasks.length > 0 ? (
           tasks.map((task) => (
-            <DraggableTaskCard key={task.id} task={task} onAddSubtask={onAddSubtask} onOpenTask={onOpenTask} />
+            <DraggableTaskCard
+              key={task.id}
+              task={task}
+              onAddSubtask={onAddSubtask}
+              onOpenTask={onOpenTask}
+              onEditDeadline={onEditDeadline}
+            />
           ))
         ) : (
           <Box
