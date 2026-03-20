@@ -14,6 +14,7 @@ type TaskBoardCardData = Pick<
   | 'dateLabel'
   | 'checklistDone'
   | 'checklistTotal'
+  | 'subtasks'
   | 'assignees'
   | 'cover'
 >;
@@ -38,12 +39,18 @@ export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
     dateLabel,
     checklistDone,
     checklistTotal,
+    subtasks,
     assignees,
     cover,
   } = task;
 
+  const checklistDoneCalculated = subtasks?.filter((subtask) => subtask.isDone).length;
+  const checklistTotalCalculated = subtasks?.length;
+  const finalChecklistDone = typeof checklistDone === 'number' ? checklistDone : checklistDoneCalculated;
+  const finalChecklistTotal = typeof checklistTotal === 'number' ? checklistTotal : checklistTotalCalculated;
+
   return (
-    <Box sx={{ bgcolor: '#FFFFFF', borderRadius: 2.5, p: 2 }}>
+    <Box sx={{ bgcolor: '#FFFFFF', borderRadius: 2.5, p: 2, width: '100%', boxSizing: 'border-box' }}>
       <Box
         sx={{
           display: 'inline-flex',
@@ -111,11 +118,11 @@ export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, color: '#6F7F99' }}>
-          {typeof checklistTotal === 'number' && (
+          {typeof finalChecklistTotal === 'number' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
               <CheckCircleOutlineRoundedIcon sx={{ fontSize: 16 }} />
               <Typography sx={{ fontSize: 13 }}>
-                {checklistDone ?? 0}/{checklistTotal}
+                {finalChecklistDone ?? 0}/{finalChecklistTotal}
               </Typography>
             </Box>
           )}

@@ -9,6 +9,7 @@ export type {
   TaskPeriod,
   FinishedTasksDynamics,
   ProjectTaskItem,
+  ProjectSubtaskItem,
   ProjectTaskStatus,
   ProjectTaskCover,
 } from './model/types';

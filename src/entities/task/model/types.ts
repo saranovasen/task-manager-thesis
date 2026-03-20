@@ -18,6 +18,12 @@ export type ProjectTaskStatus = 'queue' | 'in-progress' | 'review' | 'done';
 
 export type ProjectTaskCover = 'blue' | 'violet' | 'orange';
 
+export type ProjectSubtaskItem = {
+  id: string;
+  title: string;
+  isDone: boolean;
+};
+
 export type ProjectTaskItem = {
   id: string;
   projectId: string;
@@ -29,6 +35,7 @@ export type ProjectTaskItem = {
   dateLabel: string;
   checklistDone?: number;
   checklistTotal?: number;
+  subtasks?: ProjectSubtaskItem[];
   assignees?: string[];
   cover?: ProjectTaskCover;
 };
