@@ -1,9 +1,12 @@
 import { TasksSummaryCards } from '../widgets/TasksSummaryCards';
+import { FinishedTasks } from '../widgets/FinishedTasks';
+import { Box } from '@mui/system';
 
 export const DashboardPage = () => {
   return (
-    <div>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
       <TasksSummaryCards />
-    </div>
+      <FinishedTasks />
+    </Box>
   );
 };

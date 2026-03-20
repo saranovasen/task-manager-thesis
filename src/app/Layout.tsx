@@ -35,7 +35,7 @@ export const Layout = ({ children }: { children?: ReactNode }) => {
         }}
       >
         <Toolbar sx={{ height: 76 }} />
-        <Box sx={{ p: 3, width: '100%' }}>{children}</Box>
+        <Box sx={{ py: 3, px: '12px', width: '100%' }}>{children}</Box>
       </Box>
     </Box>
   );
