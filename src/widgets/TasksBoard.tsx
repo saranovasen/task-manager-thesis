@@ -72,19 +72,7 @@ export const TasksBoard = ({ tasks }: TasksBoardProps) => {
 
           <Stack spacing={1.5}>
             {tasksByStatus[column.key].map((task) => (
-              <TaskBoardCard
-                key={task.id}
-                id={task.id}
-                title={task.title}
-                category={task.category}
-                categoryColor={task.categoryColor}
-                description={task.description}
-                dateLabel={task.dateLabel}
-                checklistDone={task.checklistDone}
-                checklistTotal={task.checklistTotal}
-                assignees={task.assignees}
-                cover={task.cover}
-              />
+              <TaskBoardCard key={task.id} task={task} />
             ))}
 
             {tasksByStatus[column.key].length === 0 && (

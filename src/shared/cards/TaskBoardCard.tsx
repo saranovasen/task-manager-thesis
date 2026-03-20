@@ -2,18 +2,24 @@ import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlin
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import type { ProjectTaskItem } from '../../entities/task';
+
+type TaskBoardCardData = Pick<
+  ProjectTaskItem,
+  | 'id'
+  | 'title'
+  | 'category'
+  | 'categoryColor'
+  | 'description'
+  | 'dateLabel'
+  | 'checklistDone'
+  | 'checklistTotal'
+  | 'assignees'
+  | 'cover'
+>;
 
 type TaskBoardCardProps = {
-  id: string;
-  title: string;
-  category: string;
-  categoryColor: string;
-  description: string;
-  dateLabel: string;
-  checklistDone?: number;
-  checklistTotal?: number;
-  assignees?: string[];
-  cover?: 'blue' | 'violet' | 'orange';
+  task: TaskBoardCardData;
 };
 
 const coverByType = {
@@ -22,18 +28,20 @@ const coverByType = {
   orange: 'linear-gradient(135deg, #F53844 0%, #FF7A1A 52%, #F4B845 100%)',
 };
 
-export const TaskBoardCard = ({
-  id,
-  title,
-  category,
-  categoryColor,
-  description,
-  dateLabel,
-  checklistDone,
-  checklistTotal,
-  assignees,
-  cover,
-}: TaskBoardCardProps) => {
+export const TaskBoardCard = ({ task }: TaskBoardCardProps) => {
+  const {
+    id,
+    title,
+    category,
+    categoryColor,
+    description,
+    dateLabel,
+    checklistDone,
+    checklistTotal,
+    assignees,
+    cover,
+  } = task;
+
   return (
     <Box sx={{ bgcolor: '#FFFFFF', borderRadius: 2.5, p: 2 }}>
       <Box

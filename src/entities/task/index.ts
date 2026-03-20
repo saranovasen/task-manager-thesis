@@ -10,4 +10,5 @@ export type {
   FinishedTasksDynamics,
   ProjectTaskItem,
   ProjectTaskStatus,
+  ProjectTaskCover,
 } from './model/types';
