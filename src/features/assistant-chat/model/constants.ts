@@ -1,6 +1,6 @@
 import type { ChatMessage } from './types';
 
-export const ASSISTANT_CHAT_WIDTH = 350;
+export const ASSISTANT_CHAT_WIDTH = 320;
 export const ASSISTANT_CHAT_TOP_OFFSET = 76;
 
 export const initialMessages: ChatMessage[] = [

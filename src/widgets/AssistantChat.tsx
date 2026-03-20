@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputBase from '@mui/material/InputBase';
 import Typography from '@mui/material/Typography';
-import { ASSISTANT_CHAT_TOP_OFFSET, ASSISTANT_CHAT_WIDTH } from '../features/assistant-chat/model/constants';
+import { ASSISTANT_CHAT_TOP_OFFSET } from '../features/assistant-chat/model/constants';
 import { useAssistantChat } from '../features/assistant-chat/model/useAssistantChat';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -15,7 +15,7 @@ export const AssistantChat = () => {
   return (
     <Box
       sx={{
-        width: ASSISTANT_CHAT_WIDTH,
+        width: 320,
         position: 'fixed',
         right: 0,
         top: `${ASSISTANT_CHAT_TOP_OFFSET}px`,

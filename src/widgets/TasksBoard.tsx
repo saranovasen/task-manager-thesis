@@ -39,9 +39,10 @@ export const TasksBoard = ({ tasks }: TasksBoardProps) => {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(250px, 1fr))',
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
         gap: 2,
         alignItems: 'start',
+        width: '100%',
         minWidth: 0,
       }}
     >
