@@ -53,7 +53,7 @@ export const TasksPage = () => {
 
   return (
     <Box sx={{ mt: 3, width: '100%' }}>
-      <Typography sx={{ color: '#111111', fontSize: 40, fontWeight: 700, mb: 3, lineHeight: 1.1 }}>
+      <Typography sx={{ color: '#111111', fontSize: 30, fontWeight: 700, mb: 3, lineHeight: 1.1 }}>
         Задачи{' '}
         <Box component="span" sx={{ color: '#5051F9' }}>
           {project.title}
