@@ -7,3 +7,9 @@ export type ProjectItem = {
   progress: number;
   progressColor: string;
 };
+
+export type CreateProjectInput = {
+  title: string;
+  link?: string;
+  dueDate?: string;
+};

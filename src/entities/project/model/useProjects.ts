@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getProjects } from '../api/getProjects';
-import type { ProjectItem } from './types';
+import type { CreateProjectInput, ProjectItem } from './types';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -14,5 +14,19 @@ export const useProjects = () => {
     void loadProjects();
   }, []);
 
-  return { projects };
+  const addProject = (newProject: CreateProjectInput) => {
+    const project: ProjectItem = {
+      id: crypto.randomUUID(),
+      title: newProject.title,
+      link: newProject.link?.trim() || '—',
+      dueDate: newProject.dueDate || 'Без дедлайна',
+      tasks: 0,
+      progress: 0,
+      progressColor: '#2EA3E6',
+    };
+
+    setProjects((prevProjects) => [project, ...prevProjects]);
+  };
+
+  return { projects, addProject };
 };
