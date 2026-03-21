@@ -13,10 +13,16 @@
 .app-layout__toolbar {
   height: 76px;
   justify-content: flex-end;
+  gap: 12px;
 }
 
 .app-layout__login {
   color: #000000;
+}
+
+.app-layout__user {
+  color: #6f7f99;
+  font-size: 14px;
 }
 
 .app-layout__main {
