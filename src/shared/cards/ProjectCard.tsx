@@ -21,6 +21,7 @@ type ProjectCardProps = {
   progressColor: string;
   onClick?: () => void;
   onRemindClick?: () => void;
+  onEditClick?: () => void;
   onDeleteClick?: () => void;
 };
 
@@ -33,6 +34,7 @@ export const ProjectCard = ({
   progressColor,
   onClick,
   onRemindClick,
+  onEditClick,
   onDeleteClick,
 }: ProjectCardProps) => {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -55,7 +57,7 @@ export const ProjectCard = ({
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <Typography sx={{ color: '#232360', fontSize: 18, fontWeight: 500, flex: 1 }}>{title}</Typography>
-          {onDeleteClick && (
+          {(onEditClick || onDeleteClick) && (
             <>
               <IconButton
                 onClick={(event) => {
@@ -89,18 +91,35 @@ export const ProjectCard = ({
                   },
                 }}
               >
-                <MenuItem
-                  onClick={() => {
-                    setMenuAnchor(null);
-                    onDeleteClick();
-                  }}
-                  sx={{
-                    color: '#E15858',
-                    fontSize: 14,
-                  }}
-                >
-                  Удалить проект
-                </MenuItem>
+                {onEditClick && (
+                  <MenuItem
+                    onClick={() => {
+                      setMenuAnchor(null);
+                      onEditClick();
+                    }}
+                    sx={{
+                      color: '#232360',
+                      fontSize: 14,
+                    }}
+                  >
+                    Редактировать
+                  </MenuItem>
+                )}
+
+                {onDeleteClick && (
+                  <MenuItem
+                    onClick={() => {
+                      setMenuAnchor(null);
+                      onDeleteClick();
+                    }}
+                    sx={{
+                      color: '#E15858',
+                      fontSize: 14,
+                    }}
+                  >
+                    Удалить проект
+                  </MenuItem>
+                )}
               </Menu>
             </>
           )}

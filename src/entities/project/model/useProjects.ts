@@ -32,5 +32,22 @@ export const useProjects = () => {
     setProjects((prevProjects) => prevProjects.filter((p) => p.id !== projectId));
   };
 
-  return { projects, addProject, removeProject };
+  const updateProject = (projectId: string, nextData: CreateProjectInput) => {
+    setProjects((prevProjects) =>
+      prevProjects.map((project) => {
+        if (project.id !== projectId) {
+          return project;
+        }
+
+        return {
+          ...project,
+          title: nextData.title,
+          link: nextData.link?.trim() || '—',
+          dueDate: nextData.dueDate || 'Без дедлайна',
+        };
+      })
+    );
+  };
+
+  return { projects, addProject, removeProject, updateProject };
 };
