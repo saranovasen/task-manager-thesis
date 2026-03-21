@@ -1,9 +1,9 @@
-export type TaskPeriod = 'day' | 'week' | 'month';
+export type TaskPeriod = 'week' | 'month' | 'year';
 
 export type FinishedTasksDynamics = {
   labels: string[];
-  purple: number[];
-  blue: number[];
+  completed: number[];
+  newTasks: number[];
 };
 
 export type TaskSummaryItem = {

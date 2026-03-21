@@ -4,8 +4,8 @@ import type { FinishedTasksDynamics, TaskPeriod } from './types';
 
 const emptyDynamics: FinishedTasksDynamics = {
   labels: [],
-  purple: [],
-  blue: [],
+  completed: [],
+  newTasks: [],
 };
 
 export const useFinishedTasksDynamics = () => {

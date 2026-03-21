@@ -23,6 +23,12 @@ const bottomPadding = 68;
 const chartWidth = svgWidth - leftPadding - rightPadding;
 const chartHeight = svgHeight - topPadding - bottomPadding;
 
+const periodYAxisConfig: Record<TaskPeriod, { baselineMax: number; step: number }> = {
+  week: { baselineMax: 100, step: 20 },
+  month: { baselineMax: 120, step: 20 },
+  year: { baselineMax: 300, step: 50 },
+};
+
 const toPoints = (series: number[], labelsCount: number, yMax: number) => {
   const xStep = chartWidth / Math.max(labelsCount - 1, 1);
   return series.map((value, index) => ({
@@ -72,23 +78,26 @@ export const FinishedTasks = () => {
   const { period, setPeriod, dynamics: activeDataset } = useFinishedTasksDynamics();
 
   const yMax = useMemo(() => {
-    const max = Math.max(...activeDataset.purple, ...activeDataset.blue, 100);
-    return Math.ceil(max / 100) * 100;
-  }, [activeDataset]);
+    const { baselineMax, step } = periodYAxisConfig[period];
+    const actualMax = Math.max(...activeDataset.completed, ...activeDataset.newTasks, 1);
+    const roundedMax = Math.ceil(actualMax / step) * step;
+
+    return Math.max(roundedMax, baselineMax);
+  }, [activeDataset, period]);
 
   const yTicks = useMemo(() => {
     const step = yMax / 4;
     return [0, step, step * 2, step * 3, yMax];
   }, [yMax]);
 
-  const purplePoints = useMemo(
-    () => toPoints(activeDataset.purple, activeDataset.labels.length, yMax),
-    [activeDataset.purple, activeDataset.labels.length, yMax]
+  const completedPoints = useMemo(
+    () => toPoints(activeDataset.completed, activeDataset.labels.length, yMax),
+    [activeDataset.completed, activeDataset.labels.length, yMax]
   );
 
-  const bluePoints = useMemo(
-    () => toPoints(activeDataset.blue, activeDataset.labels.length, yMax),
-    [activeDataset.blue, activeDataset.labels.length, yMax]
+  const newTasksPoints = useMemo(
+    () => toPoints(activeDataset.newTasks, activeDataset.labels.length, yMax),
+    [activeDataset.newTasks, activeDataset.labels.length, yMax]
   );
 
   const xStep = chartWidth / Math.max(activeDataset.labels.length - 1, 1);
@@ -102,9 +111,9 @@ export const FinishedTasks = () => {
 
         <Box sx={finishedTasksTabsSx}>
           {[
-            { key: 'day' as TaskPeriod, label: 'День' },
             { key: 'week' as TaskPeriod, label: 'Неделя' },
             { key: 'month' as TaskPeriod, label: 'Месяц' },
+            { key: 'year' as TaskPeriod, label: 'Год' },
           ].map((tab) => {
             const isActive = period === tab.key;
 
@@ -149,13 +158,13 @@ export const FinishedTasks = () => {
             );
           })}
 
-          <path d={areaPath(purplePoints)} fill="url(#purpleArea)" />
-          <path d={areaPath(bluePoints)} fill="url(#blueArea)" />
+          <path d={areaPath(completedPoints)} fill="url(#purpleArea)" />
+          <path d={areaPath(newTasksPoints)} fill="url(#blueArea)" />
 
-          <path d={smoothPath(purplePoints)} fill="none" stroke="#4D50F1" strokeWidth="2.5" strokeLinecap="round" />
-          <path d={smoothPath(bluePoints)} fill="none" stroke="#2D99EE" strokeWidth="2.5" strokeLinecap="round" />
+          <path d={smoothPath(completedPoints)} fill="none" stroke="#4D50F1" strokeWidth="2.5" strokeLinecap="round" />
+          <path d={smoothPath(newTasksPoints)} fill="none" stroke="#2D99EE" strokeWidth="2.5" strokeLinecap="round" />
 
-          {purplePoints.map((point, index) => (
+          {completedPoints.map((point, index) => (
             <circle
               key={`p-${index}`}
               cx={point.x}
@@ -166,7 +175,7 @@ export const FinishedTasks = () => {
               strokeWidth="3"
             />
           ))}
-          {bluePoints.map((point, index) => (
+          {newTasksPoints.map((point, index) => (
             <circle
               key={`b-${index}`}
               cx={point.x}
