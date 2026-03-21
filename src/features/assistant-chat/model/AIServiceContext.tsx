@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from 'react';
-import { AIContextData } from './useAIContext';
+import type { AIContextData } from './useAIContext';
 
 type AIServiceContextType = {
   contextData?: AIContextData;
