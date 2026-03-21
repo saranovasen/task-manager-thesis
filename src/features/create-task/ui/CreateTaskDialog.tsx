@@ -1,4 +1,14 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { ProjectTaskStatus } from '../../../entities/task';
 import type { CreateTaskPayload } from '../model/types';
@@ -14,13 +24,17 @@ type FormState = {
   title: string;
   description: string;
   category: string;
+  categoryColor: string;
   dueDate: string;
 };
+
+const categoryColorOptions = ['#5051F9', '#2EA3E6', '#F57644', '#F59E0B', '#34C759', '#A855F7', '#EF4444'];
 
 const initialFormState: FormState = {
   title: '',
   description: '',
   category: '',
+  categoryColor: '#5051F9',
   dueDate: '',
 };
 
@@ -104,6 +118,7 @@ export const CreateTaskDialog = ({ open, status, onClose, onCreate }: CreateTask
       title: form.title.trim(),
       description: form.description.trim() || 'Описание не добавлено',
       category: form.category.trim() || 'Новая',
+      categoryColor: form.categoryColor,
       dateLabel: formatDueDate(form.dueDate) || 'Срок не указан',
       status,
     });
@@ -148,6 +163,37 @@ export const CreateTaskDialog = ({ open, status, onClose, onCreate }: CreateTask
             minRows={2}
             sx={fieldSx}
           />
+
+          <Box>
+            <Typography sx={{ color: '#232360', fontSize: 14, fontWeight: 500, mb: 1 }}>Цвет категории</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              {categoryColorOptions.map((color) => {
+                const isActive = form.categoryColor === color;
+
+                return (
+                  <Box
+                    key={color}
+                    component="button"
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, categoryColor: color }))}
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      border: isActive ? '2px solid #232360' : '2px solid transparent',
+                      outline: 'none',
+                      bgcolor: color,
+                      cursor: 'pointer',
+                      transition: 'transform 0.15s ease',
+                      '&:hover': {
+                        transform: 'scale(1.08)',
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
 
           <TextField
             label="Категория"

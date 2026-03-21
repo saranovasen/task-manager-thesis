@@ -13,7 +13,7 @@ export const createTask = ({ projectId, payload }: CreateTaskInput): ProjectTask
     title: payload.title,
     status: payload.status,
     category: payload.category,
-    categoryColor: '#5051F9',
+    categoryColor: payload.categoryColor,
     description: payload.description,
     dateLabel: payload.dateLabel,
     subtasks: [],

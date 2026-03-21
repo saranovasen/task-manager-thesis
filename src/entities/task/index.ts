@@ -13,5 +13,4 @@ export type {
   ProjectTaskItem,
   ProjectSubtaskItem,
   ProjectTaskStatus,
-  ProjectTaskCover,
 } from './model/types';

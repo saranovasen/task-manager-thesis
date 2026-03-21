@@ -16,8 +16,6 @@ export type TaskSummaryItem = {
 
 export type ProjectTaskStatus = 'queue' | 'in-progress' | 'review' | 'done';
 
-export type ProjectTaskCover = 'blue' | 'violet' | 'orange';
-
 export type ProjectSubtaskItem = {
   id: string;
   title: string;
@@ -36,6 +34,4 @@ export type ProjectTaskItem = {
   checklistDone?: number;
   checklistTotal?: number;
   subtasks?: ProjectSubtaskItem[];
-  assignees?: string[];
-  cover?: ProjectTaskCover;
 };

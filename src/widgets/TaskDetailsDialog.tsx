@@ -27,6 +27,8 @@ const statusLabelByKey: Record<ProjectTaskStatus, string> = {
   done: 'Готово',
 };
 
+const categoryColorOptions = ['#5051F9', '#2EA3E6', '#F57644', '#F59E0B', '#34C759', '#A855F7', '#EF4444'];
+
 type TaskDetailsDialogProps = {
   task: ProjectTaskItem | null;
   open: boolean;
@@ -34,6 +36,7 @@ type TaskDetailsDialogProps = {
   onAddSubtask: (taskId: string, title: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
   onChangeDeadline: (taskId: string, nextDate: string) => void;
+  onChangeCategoryColor: (taskId: string, nextColor: string) => void;
   onDeleteSubtask: (taskId: string, subtaskId: string) => void;
   onDeleteTask: (taskId: string) => void;
 };
@@ -45,6 +48,7 @@ export const TaskDetailsDialog = ({
   onAddSubtask,
   onToggleSubtask,
   onChangeDeadline,
+  onChangeCategoryColor,
   onDeleteSubtask,
   onDeleteTask,
 }: TaskDetailsDialogProps) => {
@@ -186,6 +190,20 @@ export const TaskDetailsDialog = ({
                 px: 1,
                 py: 0.4,
                 borderRadius: 1,
+                bgcolor: task?.categoryColor ?? '#EEF0FF',
+              }}
+            >
+              <Typography sx={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600 }}>
+                Категория: {task?.category ?? '-'}
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                display: 'inline-flex',
+                px: 1,
+                py: 0.4,
+                borderRadius: 1,
                 bgcolor: '#EEF0FF',
               }}
             >
@@ -261,6 +279,39 @@ export const TaskDetailsDialog = ({
                 Срок: {task?.dateLabel ? formatDisplayDate(task.dateLabel) : '-'}
               </Box>
             )}
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography sx={{ color: '#6F7F99', fontSize: 14, fontWeight: 500 }}>Цвет категории:</Typography>
+            {categoryColorOptions.map((color) => {
+              const isActive = task?.categoryColor === color;
+
+              return (
+                <Box
+                  key={color}
+                  component="button"
+                  type="button"
+                  onClick={() => {
+                    if (task) {
+                      onChangeCategoryColor(task.id, color);
+                    }
+                  }}
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    border: isActive ? '2px solid #232360' : '2px solid transparent',
+                    outline: 'none',
+                    bgcolor: color,
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease',
+                    '&:hover': {
+                      transform: 'scale(1.08)',
+                    },
+                  }}
+                />
+              );
+            })}
           </Box>
 
           <Typography sx={{ color: '#232360', fontSize: 18, fontWeight: 600 }}>Подзадачи</Typography>

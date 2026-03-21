@@ -1,6 +1,5 @@
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
@@ -19,8 +18,6 @@ type TaskBoardCardData = Pick<
   | 'checklistDone'
   | 'checklistTotal'
   | 'subtasks'
-  | 'assignees'
-  | 'cover'
 >;
 
 type TaskBoardCardProps = {
@@ -30,26 +27,8 @@ type TaskBoardCardProps = {
   onEditDeadline?: (taskId: string, nextDate: string) => void;
 };
 
-const coverByType = {
-  blue: 'linear-gradient(135deg, #24B7D6 0%, #315DDA 50%, #4B8CF8 100%)',
-  violet: 'linear-gradient(135deg, #1E86DD 0%, #5F55F4 50%, #28B3EF 100%)',
-  orange: 'linear-gradient(135deg, #F53844 0%, #FF7A1A 52%, #F4B845 100%)',
-};
-
 export const TaskBoardCard = ({ task, onAddSubtask, onOpen, onEditDeadline }: TaskBoardCardProps) => {
-  const {
-    id,
-    title,
-    category,
-    categoryColor,
-    description,
-    dateLabel,
-    checklistDone,
-    checklistTotal,
-    subtasks,
-    assignees,
-    cover,
-  } = task;
+  const { id, title, category, categoryColor, description, dateLabel, checklistDone, checklistTotal, subtasks } = task;
 
   const checklistDoneCalculated = subtasks?.filter((subtask) => subtask.isDone).length;
   const checklistTotalCalculated = subtasks?.length;
@@ -124,17 +103,6 @@ export const TaskBoardCard = ({ task, onAddSubtask, onOpen, onEditDeadline }: Ta
       >
         {category}
       </Box>
-
-      {cover && (
-        <Box
-          sx={{
-            borderRadius: 2,
-            height: 128,
-            mb: 1.5,
-            background: coverByType[cover],
-          }}
-        />
-      )}
 
       <Typography sx={{ color: '#20245C', fontSize: 15, fontWeight: 500, mb: 0.5 }}>{title}</Typography>
       <Typography sx={{ color: '#7A859E', fontSize: 14, mb: 1.5 }}>{description}</Typography>
@@ -216,25 +184,7 @@ export const TaskBoardCard = ({ task, onAddSubtask, onOpen, onEditDeadline }: Ta
       )}
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {assignees?.map((assignee, index) => (
-            <Avatar
-              key={`${id}-${assignee}-${index}`}
-              sx={{
-                width: 22,
-                height: 22,
-                fontSize: 11,
-                ml: index === 0 ? 0 : -0.7,
-                border: '2px solid #FFFFFF',
-                bgcolor: index % 2 === 0 ? '#F39A4E' : '#A6755B',
-              }}
-            >
-              {assignee}
-            </Avatar>
-          ))}
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, color: '#6F7F99' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, color: '#6F7F99', ml: 'auto' }}>
           {onAddSubtask && (
             <IconButton
               size="small"

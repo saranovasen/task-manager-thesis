@@ -91,7 +91,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     categoryColor: '#5051F9',
     description: 'Содержание ВКР',
     dateLabel: 'Apr 21, 2026',
-    cover: 'blue',
   },
   {
     id: 't-4',
@@ -125,8 +124,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     dateLabel: 'Apr 20, 2026',
     checklistDone: 0,
     checklistTotal: 8,
-    assignees: ['S', 'A'],
-    cover: 'blue',
   },
   {
     id: 't-6',
@@ -139,7 +136,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     dateLabel: 'Apr 21, 2026',
     checklistDone: 0,
     checklistTotal: 8,
-    assignees: ['S', 'D'],
   },
   {
     id: 't-7',
@@ -174,7 +170,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     dateLabel: 'Apr 30, 2026',
     checklistDone: 0,
     checklistTotal: 8,
-    cover: 'violet',
   },
   {
     id: 't-10',
@@ -221,7 +216,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     dateLabel: 'Apr 21, 2026',
     checklistDone: 0,
     checklistTotal: 8,
-    cover: 'orange',
   },
   {
     id: 't-14',
@@ -234,7 +228,6 @@ export const projectTasksMock: ProjectTaskItem[] = [
     dateLabel: 'Apr 21, 2026',
     checklistDone: 0,
     checklistTotal: 8,
-    cover: 'blue',
   },
   {
     id: 't-15',

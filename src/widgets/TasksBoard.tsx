@@ -225,6 +225,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     }
   };
 
+  const handleChangeCategoryColor = (taskId: string, nextColor: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return {
+          ...task,
+          categoryColor: nextColor,
+        };
+      })
+    );
+  };
+
   const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
     setLocalTasks((prevTasks) =>
       prevTasks.map((task) => {
@@ -295,6 +310,7 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         onAddSubtask={handleAddSubtaskFromDialog}
         onToggleSubtask={handleToggleSubtask}
         onChangeDeadline={handleEditDeadline}
+        onChangeCategoryColor={handleChangeCategoryColor}
         onDeleteSubtask={handleDeleteSubtask}
         onDeleteTask={handleDeleteTask}
       />
