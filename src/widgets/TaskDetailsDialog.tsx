@@ -308,6 +308,15 @@ export const TaskDetailsDialog = ({
                   '&:hover': {
                     bgcolor: '#F7F8FF',
                   },
+                  '& .subtask-delete-btn': {
+                    opacity: 0,
+                    transform: 'scale(0.9)',
+                    transition: 'all 160ms ease',
+                  },
+                  '&:hover .subtask-delete-btn, &:focus-within .subtask-delete-btn': {
+                    opacity: 1,
+                    transform: 'scale(1)',
+                  },
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
@@ -335,6 +344,7 @@ export const TaskDetailsDialog = ({
                   />
                 </Box>
                 <IconButton
+                  className="subtask-delete-btn"
                   size="small"
                   onClick={(event) => {
                     event.stopPropagation();
@@ -347,7 +357,11 @@ export const TaskDetailsDialog = ({
                   }}
                   sx={{
                     p: 0.5,
-                    color: '#FF5757',
+                    color: '#B7BED0',
+                    '&:hover': {
+                      color: '#E15858',
+                      bgcolor: '#FFEFF1',
+                    },
                   }}
                 >
                   <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
@@ -365,20 +379,19 @@ export const TaskDetailsDialog = ({
       <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1.5, justifyContent: 'space-between' }}>
         <Button
           onClick={() => setDeleteTaskDialogOpen(true)}
-          variant="contained"
+          variant="text"
+          startIcon={<DeleteOutlineRoundedIcon sx={{ fontSize: 17 }} />}
           sx={{
-            minWidth: 129,
+            minWidth: 0,
             height: 39,
-            borderRadius: 2.5,
+            borderRadius: 2,
             textTransform: 'none',
             fontSize: 14,
-            fontWeight: 600,
-            bgcolor: '#FF5757',
-            color: '#FFFFFF',
-            boxShadow: 'none',
+            fontWeight: 500,
+            color: '#9AA5BC',
             '&:hover': {
-              bgcolor: '#E74545',
-              boxShadow: 'none',
+              bgcolor: '#FFEFF1',
+              color: '#E15858',
             },
           }}
         >
