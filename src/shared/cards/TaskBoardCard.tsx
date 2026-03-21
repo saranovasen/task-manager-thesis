@@ -104,8 +104,20 @@ export const TaskBoardCard = ({ task, onAddSubtask, onOpen, onEditDeadline }: Ta
         {category}
       </Box>
 
-      <Typography sx={{ color: '#20245C', fontSize: 15, fontWeight: 500, mb: 0.5 }}>{title}</Typography>
-      <Typography sx={{ color: '#7A859E', fontSize: 14, mb: 1.5 }}>{description}</Typography>
+      <Typography sx={{ color: '#20245C', fontSize: 15, fontWeight: 500, mb: 0.5, wordBreak: 'break-word' }}>
+        {title}
+      </Typography>
+      <Typography
+        sx={{
+          color: '#7A859E',
+          fontSize: 14,
+          mb: 1.5,
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {description}
+      </Typography>
 
       {isEditingDeadline ? (
         <TextField

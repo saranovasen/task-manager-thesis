@@ -36,6 +36,8 @@ type TaskDetailsDialogProps = {
   onAddSubtask: (taskId: string, title: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
   onChangeDeadline: (taskId: string, nextDate: string) => void;
+  onChangeDescription: (taskId: string, nextDescription: string) => void;
+  onChangeCategory: (taskId: string, nextCategory: string) => void;
   onChangeCategoryColor: (taskId: string, nextColor: string) => void;
   onDeleteSubtask: (taskId: string, subtaskId: string) => void;
   onDeleteTask: (taskId: string) => void;
@@ -48,13 +50,21 @@ export const TaskDetailsDialog = ({
   onAddSubtask,
   onToggleSubtask,
   onChangeDeadline,
+  onChangeDescription,
+  onChangeCategory,
   onChangeCategoryColor,
   onDeleteSubtask,
   onDeleteTask,
 }: TaskDetailsDialogProps) => {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [deadlineValue, setDeadlineValue] = useState('');
+  const [descriptionValue, setDescriptionValue] = useState('');
+  const [categoryColorValue, setCategoryColorValue] = useState('#5051F9');
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [categoryValue, setCategoryValue] = useState('');
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [saveChangesDialogOpen, setSaveChangesDialogOpen] = useState(false);
   const [deleteSubtaskDialogOpen, setDeleteSubtaskDialogOpen] = useState(false);
   const [subtaskToDelete, setSubtaskToDelete] = useState<{ taskId: string; subtaskId: string; title: string } | null>(
     null
@@ -97,10 +107,29 @@ export const TaskDetailsDialog = ({
   }, [task?.id, task?.dateLabel]);
 
   useEffect(() => {
+    setDescriptionValue(task?.description ?? '');
+  }, [task?.id, task?.description]);
+
+  useEffect(() => {
+    setCategoryValue(task?.category ?? '');
+  }, [task?.id, task?.category]);
+
+  useEffect(() => {
+    setCategoryColorValue(task?.categoryColor ?? '#5051F9');
+  }, [task?.id, task?.categoryColor]);
+
+  useEffect(() => {
     if (!open) {
       setIsEditingDeadline(false);
+      setIsEditingDescription(false);
+      setIsEditingCategory(false);
+      setSaveChangesDialogOpen(false);
+      setDeadlineValue(toInputDate(task?.dateLabel));
+      setDescriptionValue(task?.description ?? '');
+      setCategoryValue(task?.category ?? '');
+      setCategoryColorValue(task?.categoryColor ?? '#5051F9');
     }
-  }, [open]);
+  }, [open, task?.dateLabel, task?.description, task?.category, task?.categoryColor]);
 
   const primaryButtonSx = {
     minWidth: 129,
@@ -153,20 +182,63 @@ export const TaskDetailsDialog = ({
     setNewSubtaskTitle('');
   };
 
-  const submitDeadline = () => {
+  const normalizedDescription = descriptionValue.trim() || 'Описание не добавлено';
+  const normalizedCategory = categoryValue.trim() || 'Новая';
+  const currentDescription = task?.description ?? 'Описание не добавлено';
+  const currentCategory = task?.category ?? 'Новая';
+  const currentDeadlineValue = toInputDate(task?.dateLabel);
+  const currentCategoryColor = task?.categoryColor ?? '#5051F9';
+
+  const hasUnsavedChanges =
+    Boolean(task) &&
+    (normalizedDescription !== currentDescription ||
+      normalizedCategory !== currentCategory ||
+      deadlineValue !== currentDeadlineValue ||
+      categoryColorValue !== currentCategoryColor);
+
+  const exitEditModes = () => {
+    setIsEditingDeadline(false);
+    setIsEditingDescription(false);
+    setIsEditingCategory(false);
+  };
+
+  const saveDraftChanges = () => {
     if (!task) {
-      setIsEditingDeadline(false);
       return;
     }
 
-    onChangeDeadline(task.id, deadlineValue);
-    setIsEditingDeadline(false);
+    if (normalizedDescription !== currentDescription) {
+      onChangeDescription(task.id, normalizedDescription);
+    }
+
+    if (normalizedCategory !== currentCategory) {
+      onChangeCategory(task.id, normalizedCategory);
+    }
+
+    if (deadlineValue !== currentDeadlineValue) {
+      onChangeDeadline(task.id, deadlineValue);
+    }
+
+    if (categoryColorValue !== currentCategoryColor) {
+      onChangeCategoryColor(task.id, categoryColorValue);
+    }
+
+    exitEditModes();
+  };
+
+  const handleRequestClose = () => {
+    if (hasUnsavedChanges) {
+      setSaveChangesDialogOpen(true);
+      return;
+    }
+
+    onClose();
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleRequestClose}
       fullWidth
       maxWidth="sm"
       PaperProps={{
@@ -181,22 +253,114 @@ export const TaskDetailsDialog = ({
 
       <DialogContent sx={{ pb: 1 }}>
         <Stack spacing={2}>
-          {task?.description && <Typography sx={{ color: '#6F7F99', mt: 0.5 }}>{task.description}</Typography>}
+          {isEditingDescription ? (
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              value={descriptionValue}
+              onChange={(event) => setDescriptionValue(event.target.value)}
+              onKeyDown={(event) => {
+                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                  event.preventDefault();
+                  setIsEditingDescription(false);
+                }
 
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Box
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  setDescriptionValue(task?.description ?? '');
+                  setIsEditingDescription(false);
+                }
+              }}
+              autoFocus
+              sx={fieldSx}
+            />
+          ) : (
+            <Typography
+              onClick={() => setIsEditingDescription(true)}
               sx={{
-                display: 'inline-flex',
-                px: 1,
-                py: 0.4,
+                color: '#6F7F99',
+                mt: 0.5,
+                cursor: 'pointer',
                 borderRadius: 1,
-                bgcolor: task?.categoryColor ?? '#EEF0FF',
+                px: 0.5,
+                py: 0.4,
+                '&:hover': {
+                  bgcolor: '#F7F8FF',
+                },
               }}
             >
-              <Typography sx={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600 }}>
-                Категория: {task?.category ?? '-'}
-              </Typography>
-            </Box>
+              {task?.description ?? 'Описание не добавлено'}
+            </Typography>
+          )}
+
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
+            {isEditingCategory ? (
+              <TextField
+                size="small"
+                value={categoryValue}
+                onChange={(event) => setCategoryValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    setIsEditingCategory(false);
+                  }
+
+                  if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setCategoryValue(task?.category ?? '');
+                    setIsEditingCategory(false);
+                  }
+                }}
+                autoFocus
+                sx={{
+                  minWidth: 180,
+                  '& .MuiOutlinedInput-root': {
+                    height: 29,
+                    borderRadius: 1,
+                    px: 1,
+                    color: '#1F2564',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    bgcolor: '#FFFFFF',
+                    '& fieldset': {
+                      borderColor: '#D7DDE8',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#C8D0E0',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#5051F9',
+                    },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    p: 0,
+                    color: '#1F2564',
+                    fontSize: 13,
+                    fontWeight: 500,
+                  },
+                }}
+              />
+            ) : (
+              <Box
+                onClick={() => setIsEditingCategory(true)}
+                sx={{
+                  display: 'inline-flex',
+                  px: 1,
+                  py: 0.4,
+                  borderRadius: 1,
+                  bgcolor: task?.categoryColor ?? '#EEF0FF',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.92,
+                  },
+                }}
+              >
+                <Typography sx={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600 }}>
+                  Категория: {task?.category ?? '-'}
+                </Typography>
+              </Box>
+            )}
 
             <Box
               sx={{
@@ -217,11 +381,10 @@ export const TaskDetailsDialog = ({
                 type="date"
                 value={deadlineValue}
                 onChange={(event) => setDeadlineValue(event.target.value)}
-                onBlur={submitDeadline}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
                     event.preventDefault();
-                    submitDeadline();
+                    setIsEditingDeadline(false);
                   }
 
                   if (event.key === 'Escape') {
@@ -284,18 +447,14 @@ export const TaskDetailsDialog = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ color: '#6F7F99', fontSize: 14, fontWeight: 500 }}>Цвет категории:</Typography>
             {categoryColorOptions.map((color) => {
-              const isActive = task?.categoryColor === color;
+              const isActive = categoryColorValue === color;
 
               return (
                 <Box
                   key={color}
                   component="button"
                   type="button"
-                  onClick={() => {
-                    if (task) {
-                      onChangeCategoryColor(task.id, color);
-                    }
-                  }}
+                  onClick={() => setCategoryColorValue(color)}
                   sx={{
                     width: 22,
                     height: 22,
@@ -448,10 +607,73 @@ export const TaskDetailsDialog = ({
         >
           Удалить
         </Button>
-        <Button onClick={onClose} variant="contained" sx={secondaryButtonSx}>
-          Закрыть
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button onClick={handleRequestClose} variant="contained" sx={secondaryButtonSx}>
+            Закрыть
+          </Button>
+          <Button onClick={saveDraftChanges} variant="contained" sx={primaryButtonSx} disabled={!hasUnsavedChanges}>
+            Сохранить
+          </Button>
+        </Box>
       </DialogActions>
+
+      <Dialog
+        open={saveChangesDialogOpen}
+        onClose={() => setSaveChangesDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1, color: '#232360', fontSize: 22, fontWeight: 600 }}>Сохранить изменения?</DialogTitle>
+        <DialogContent sx={{ pb: 1 }}>
+          <Typography sx={{ color: '#6F7F99' }}>Есть несохраненные изменения. Сохранить их перед закрытием?</Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1.5, flexWrap: 'nowrap' }}>
+          <Button
+            onClick={() => setSaveChangesDialogOpen(false)}
+            variant="contained"
+            sx={{ ...secondaryButtonSx, flex: 1, minWidth: 0, whiteSpace: 'nowrap' }}
+          >
+            Отмена
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSaveChangesDialogOpen(false);
+              onClose();
+            }}
+            sx={{
+              ...secondaryButtonSx,
+              flex: 1,
+              minWidth: 0,
+              whiteSpace: 'nowrap',
+              bgcolor: '#F3F4FA',
+              color: '#6F7F99',
+              '&:hover': {
+                bgcolor: '#E9ECF5',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            Не сохранять
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              saveDraftChanges();
+              setSaveChangesDialogOpen(false);
+              onClose();
+            }}
+            sx={{ ...primaryButtonSx, flex: 1, minWidth: 0, whiteSpace: 'nowrap' }}
+          >
+            Сохранить
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ConfirmDeleteDialog
         open={deleteTaskDialogOpen}

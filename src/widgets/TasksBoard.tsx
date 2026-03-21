@@ -377,6 +377,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     );
   };
 
+  const handleChangeDescription = (taskId: string, nextDescription: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return {
+          ...task,
+          description: nextDescription,
+        };
+      })
+    );
+  };
+
   const handleDeleteTask = (taskId: string) => {
     setLocalTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
     if (selectedTaskId === taskId) {
@@ -394,6 +409,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         return {
           ...task,
           categoryColor: nextColor,
+        };
+      })
+    );
+  };
+
+  const handleChangeCategory = (taskId: string, nextCategory: string) => {
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return {
+          ...task,
+          category: nextCategory,
         };
       })
     );
@@ -485,6 +515,8 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         onAddSubtask={handleAddSubtaskFromDialog}
         onToggleSubtask={handleToggleSubtask}
         onChangeDeadline={handleEditDeadline}
+        onChangeDescription={handleChangeDescription}
+        onChangeCategory={handleChangeCategory}
         onChangeCategoryColor={handleChangeCategoryColor}
         onDeleteSubtask={handleDeleteSubtask}
         onDeleteTask={handleDeleteTask}
