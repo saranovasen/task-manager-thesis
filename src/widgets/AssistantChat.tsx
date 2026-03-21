@@ -6,11 +6,20 @@ import InputBase from '@mui/material/InputBase';
 import Typography from '@mui/material/Typography';
 import { ASSISTANT_CHAT_TOP_OFFSET } from '../features/assistant-chat/model/constants';
 import { useAssistantChat } from '../features/assistant-chat/model/useAssistantChat';
+import { useAuth } from '../entities/auth';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 export const AssistantChat = () => {
-  const { messages, prompt, setPrompt, isSending, hasPrompt, canSend, handleSend } = useAssistantChat();
+  const { user } = useAuth();
+  const { messages, prompt, setPrompt, isSending, hasPrompt, canSend, handleSend } = useAssistantChat({
+    accessToken: user ? undefined : undefined,
+    context: {
+      userId: user?.id,
+      activeTasks: undefined,
+      activeProjects: undefined,
+    },
+  });
 
   return (
     <Box
@@ -63,12 +72,21 @@ export const AssistantChat = () => {
                     width: 7,
                     height: 7,
                     borderRadius: '50%',
-                    bgcolor: '#2ACB75',
+                    bgcolor: message.metadata?.isError ? '#FF6B6B' : '#2ACB75',
                     border: '1px solid #F3F4F8',
                   }}
                 />
               </Box>
-              <Box sx={{ bgcolor: '#ECEFF4', color: '#6A7891', borderRadius: 1.5, px: 2, py: 1.5, maxWidth: 240 }}>
+              <Box
+                sx={{
+                  bgcolor: message.metadata?.isError ? '#FFE5E5' : '#ECEFF4',
+                  color: message.metadata?.isError ? '#D32F2F' : '#6A7891',
+                  borderRadius: 1.5,
+                  px: 2,
+                  py: 1.5,
+                  maxWidth: 240,
+                }}
+              >
                 <Typography sx={{ fontSize: 16, lineHeight: 1.35, whiteSpace: 'pre-line' }}>{message.text}</Typography>
               </Box>
             </Box>
