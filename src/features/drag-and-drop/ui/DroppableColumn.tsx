@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useDroppable } from '@dnd-kit/core';
+import { Fragment } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../../../entities/task';
 import { DraggableTaskCard } from './DraggableTaskCard';
 
@@ -16,6 +17,7 @@ type DroppableColumnProps = {
   onAddSubtask?: (taskId: string) => void;
   onOpenTask?: (taskId: string) => void;
   onEditDeadline?: (taskId: string, nextDate: string) => void;
+  placeholderIndex?: number | null;
 };
 
 export const DroppableColumn = ({
@@ -26,10 +28,25 @@ export const DroppableColumn = ({
   onAddSubtask,
   onOpenTask,
   onEditDeadline,
+  placeholderIndex,
 }: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: columnId,
   });
+
+  const normalizedPlaceholderIndex =
+    typeof placeholderIndex === 'number' ? Math.min(Math.max(placeholderIndex, 0), tasks.length) : null;
+
+  const renderPlaceholder = () => (
+    <Box
+      sx={{
+        height: 92,
+        borderRadius: 2.5,
+        border: '2px dashed #8D98FF',
+        bgcolor: '#EEF0FF',
+      }}
+    />
+  );
 
   return (
     <Box ref={setNodeRef} sx={{ minWidth: 0, height: '100%' }}>
@@ -72,16 +89,22 @@ export const DroppableColumn = ({
           transition: 'all 150ms cubic-bezier(0.2, 0, 0, 1)',
         }}
       >
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <DraggableTaskCard
-              key={task.id}
-              task={task}
-              onAddSubtask={onAddSubtask}
-              onOpenTask={onOpenTask}
-              onEditDeadline={onEditDeadline}
-            />
-          ))
+        {tasks.length > 0 || normalizedPlaceholderIndex !== null ? (
+          <>
+            {tasks.map((task, index) => (
+              <Fragment key={task.id}>
+                {normalizedPlaceholderIndex === index && renderPlaceholder()}
+                <DraggableTaskCard
+                  task={task}
+                  onAddSubtask={onAddSubtask}
+                  onOpenTask={onOpenTask}
+                  onEditDeadline={onEditDeadline}
+                />
+              </Fragment>
+            ))}
+
+            {normalizedPlaceholderIndex === tasks.length && renderPlaceholder()}
+          </>
         ) : (
           <Box
             sx={{

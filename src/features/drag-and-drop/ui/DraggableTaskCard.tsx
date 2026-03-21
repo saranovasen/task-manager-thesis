@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { ProjectTaskItem } from '../../../entities/task';
 import { TaskBoardCard } from '../../../shared/cards/TaskBoardCard';
 
@@ -14,6 +14,9 @@ export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask, onEditDeadli
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
+  const { setNodeRef: setDropNodeRef } = useDroppable({
+    id: `task-drop-${task.id}`,
+  });
 
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -23,7 +26,10 @@ export const DraggableTaskCard = ({ task, onAddSubtask, onOpenTask, onEditDeadli
 
   return (
     <Box
-      ref={setNodeRef}
+      ref={(node: HTMLElement | null) => {
+        setNodeRef(node);
+        setDropNodeRef(node);
+      }}
       style={style}
       {...attributes}
       {...listeners}

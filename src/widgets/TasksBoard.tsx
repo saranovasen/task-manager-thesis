@@ -1,10 +1,22 @@
 import Box from '@mui/material/Box';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, closestCorners } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+  closestCorners,
+} from '@dnd-kit/core';
 import { useMemo, useState, useEffect } from 'react';
 import type { ProjectTaskItem, ProjectTaskStatus } from '../entities/task';
 import { createSubtask, CreateSubtaskDialog } from '../features/create-subtask';
 import { createTask, CreateTaskDialog, type CreateTaskPayload } from '../features/create-task';
 import { DroppableColumn } from '../features/drag-and-drop';
+import { TaskBoardCard } from '../shared/cards/TaskBoardCard';
 import { TaskDetailsDialog } from './TaskDetailsDialog';
 
 const columnMeta: Array<{ key: ProjectTaskStatus; label: string }> = [
@@ -25,6 +37,10 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<ProjectTaskStatus>('queue');
   const [createSubtaskTaskId, setCreateSubtaskTaskId] = useState<string | null>(null);
+  const [activeDragTaskId, setActiveDragTaskId] = useState<string | null>(null);
+  const [currentOverId, setCurrentOverId] = useState<string | null>(null);
+  const [insertAfterOverTask, setInsertAfterOverTask] = useState(false);
+  const [dragOverlayWidth, setDragOverlayWidth] = useState<number | null>(null);
 
   const formatDateLabel = (value: Date) =>
     value.toLocaleDateString('en-US', {
@@ -37,8 +53,16 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     setLocalTasks(tasks);
   }, [tasks]);
 
+  const visibleTasks = useMemo(() => {
+    if (!activeDragTaskId) {
+      return localTasks;
+    }
+
+    return localTasks.filter((task) => task.id !== activeDragTaskId);
+  }, [localTasks, activeDragTaskId]);
+
   const tasksByStatus = useMemo(() => {
-    return localTasks.reduce(
+    return visibleTasks.reduce(
       (acc, task) => {
         acc[task.status].push(task);
         return acc;
@@ -50,7 +74,59 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         done: [],
       } as Record<ProjectTaskStatus, ProjectTaskItem[]>
     );
-  }, [localTasks]);
+  }, [visibleTasks]);
+
+  const activeDragTask = useMemo(
+    () => localTasks.find((task) => task.id === activeDragTaskId) ?? null,
+    [localTasks, activeDragTaskId]
+  );
+
+  const shouldInsertAfterTask = (
+    overId: string | null,
+    activeRect?: { top: number; height: number } | null,
+    overRect?: { top: number; height: number } | null
+  ) => {
+    if (!overId || !overId.startsWith('task-drop-') || !activeRect || !overRect) {
+      return false;
+    }
+
+    const activeCenterY = activeRect.top + activeRect.height / 2;
+    const overCenterY = overRect.top + overRect.height / 2;
+    return activeCenterY > overCenterY;
+  };
+
+  const getPlaceholderIndex = (columnId: ProjectTaskStatus): number | null => {
+    if (!activeDragTaskId || !currentOverId) {
+      return null;
+    }
+
+    const overIsColumn = columnMeta.some((column) => column.key === currentOverId);
+    const overIsTask = currentOverId.startsWith('task-drop-');
+
+    if (!overIsColumn && !overIsTask) {
+      return null;
+    }
+
+    const columnTasks = tasksByStatus[columnId];
+
+    if (overIsColumn) {
+      return currentOverId === columnId ? columnTasks.length : null;
+    }
+
+    const overTaskId = currentOverId.replace('task-drop-', '');
+    const overTask = visibleTasks.find((task) => task.id === overTaskId);
+
+    if (!overTask || overTask.status !== columnId) {
+      return null;
+    }
+
+    const index = columnTasks.findIndex((task) => task.id === overTaskId);
+    if (index < 0) {
+      return columnTasks.length;
+    }
+
+    return Math.min(index + (insertAfterOverTask ? 1 : 0), columnTasks.length);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,30 +137,113 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragTaskId(event.active.id as string);
+    setCurrentOverId(null);
+    setInsertAfterOverTask(false);
+    const initialWidth = event.active.rect.current.initial?.width;
+    setDragOverlayWidth(typeof initialWidth === 'number' ? initialWidth : null);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const overId = (event.over?.id as string | undefined) ?? null;
+    setCurrentOverId(overId);
+
+    const activeRect = event.active.rect.current.translated ?? event.active.rect.current.initial;
+    const overRect = event.over?.rect;
+    setInsertAfterOverTask(shouldInsertAfterTask(overId, activeRect, overRect));
+  };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    setActiveDragTaskId(null);
+    setCurrentOverId(null);
+    setInsertAfterOverTask(false);
+    setDragOverlayWidth(null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) {
+    const finishDrag = () => {
+      setActiveDragTaskId(null);
+      setCurrentOverId(null);
+      setInsertAfterOverTask(false);
+      setDragOverlayWidth(null);
+    };
+
+    if (!over) {
+      finishDrag();
       return;
     }
 
     const draggedTaskId = active.id as string;
-    const targetColumnId = over.id as string;
+    const overId = over.id as string;
+    const isColumnDrop = columnMeta.some((col) => col.key === overId);
+    const isTaskDrop = overId.startsWith('task-drop-');
 
     const draggedTask = localTasks.find((t) => t.id === draggedTaskId);
-    if (!draggedTask || !columnMeta.find((col) => col.key === targetColumnId)) {
+    if (!draggedTask || (!isColumnDrop && !isTaskDrop)) {
       return;
     }
 
-    const newStatus = targetColumnId as ProjectTaskStatus;
-    if (draggedTask.status === newStatus) {
+    const targetTaskId = isTaskDrop ? overId.replace('task-drop-', '') : null;
+    if (targetTaskId === draggedTaskId) {
+      finishDrag();
       return;
     }
 
-    const updatedTasks = localTasks.map((task) => (task.id === draggedTaskId ? { ...task, status: newStatus } : task));
+    const targetTask = targetTaskId ? localTasks.find((task) => task.id === targetTaskId) : null;
+    const nextStatus = isColumnDrop ? (overId as ProjectTaskStatus) : targetTask?.status;
 
-    setLocalTasks(updatedTasks);
-    onTaskStatusChange?.(draggedTaskId, newStatus);
+    if (!nextStatus) {
+      finishDrag();
+      return;
+    }
+
+    setLocalTasks((prevTasks) => {
+      const sourceIndex = prevTasks.findIndex((task) => task.id === draggedTaskId);
+      if (sourceIndex < 0) {
+        return prevTasks;
+      }
+
+      const sourceTask = prevTasks[sourceIndex];
+      const movedTask: ProjectTaskItem =
+        sourceTask.status === nextStatus ? sourceTask : { ...sourceTask, status: nextStatus };
+
+      const withoutSource = prevTasks.filter((task) => task.id !== draggedTaskId);
+
+      if (targetTaskId) {
+        const targetIndex = withoutSource.findIndex((task) => task.id === targetTaskId);
+        if (targetIndex < 0) {
+          return prevTasks;
+        }
+
+        const activeRect = active.rect.current.translated ?? active.rect.current.initial;
+        const shouldInsertAfter = shouldInsertAfterTask(overId, activeRect, over.rect);
+        const insertIndex = Math.min(targetIndex + (shouldInsertAfter ? 1 : 0), withoutSource.length);
+
+        const reordered = [...withoutSource];
+        reordered.splice(insertIndex, 0, movedTask);
+        return reordered;
+      }
+
+      const reordered = [...withoutSource];
+      const lastIndexInColumn = reordered.reduce((lastIndex, task, index) => {
+        if (task.status === nextStatus) {
+          return index;
+        }
+        return lastIndex;
+      }, -1);
+
+      reordered.splice(lastIndexInColumn + 1, 0, movedTask);
+      return reordered;
+    });
+
+    if (draggedTask.status !== nextStatus) {
+      onTaskStatusChange?.(draggedTaskId, nextStatus);
+    }
+
+    finishDrag();
   };
 
   const handleAddTask = (status: ProjectTaskStatus) => {
@@ -278,7 +437,14 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   );
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragCancel={handleDragCancel}
+      onDragEnd={handleDragEnd}
+      collisionDetection={closestCorners}
+    >
       <Box
         sx={{
           display: 'grid',
@@ -299,9 +465,18 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
             onAddSubtask={handleAddSubtask}
             onOpenTask={setSelectedTaskId}
             onEditDeadline={handleEditDeadline}
+            placeholderIndex={getPlaceholderIndex(column.key)}
           />
         ))}
       </Box>
+
+      <DragOverlay>
+        {activeDragTask ? (
+          <Box sx={{ width: dragOverlayWidth ? `${dragOverlayWidth}px` : undefined, opacity: 0.95 }}>
+            <TaskBoardCard task={activeDragTask} />
+          </Box>
+        ) : null}
+      </DragOverlay>
 
       <TaskDetailsDialog
         open={Boolean(selectedTaskId)}
