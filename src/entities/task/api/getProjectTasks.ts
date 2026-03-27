@@ -1,6 +1,8 @@
-import { projectTasksMock } from '../model/mockData';
+import { httpRequest } from '../../../shared/api/httpClient';
 import type { ProjectTaskItem } from '../model/types';
 
-export const getProjectTasks = async (projectId: string): Promise<ProjectTaskItem[]> => {
-  return Promise.resolve(projectTasksMock.filter((task) => task.projectId === projectId));
+export const getProjectTasks = async (projectId: string, token?: string): Promise<ProjectTaskItem[]> => {
+  return httpRequest<ProjectTaskItem[]>(`/projects/${projectId}/tasks`, {
+    token,
+  });
 };

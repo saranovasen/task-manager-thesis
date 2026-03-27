@@ -148,17 +148,19 @@ export const ProjectCard = ({
       </Box>
 
       <Box sx={{ minWidth: 150 }}>
-        <Typography sx={{ color: '#232360', fontSize: 18, fontWeight: 500, mb: 1.5 }}>Прогресс {progress}%</Typography>
+        <Typography sx={{ color: '#232360', fontSize: 18, fontWeight: 500, mb: 1.5 }}>
+          {progress === -1 ? 'Нет задач' : `Прогресс ${progress}%`}
+        </Typography>
         <LinearProgress
           variant="determinate"
-          value={progress}
+          value={progress === -1 ? 0 : progress}
           sx={{
             height: 10,
             borderRadius: 99,
-            bgcolor: '#D7DCE5',
+            bgcolor: progress === -1 ? '#E2E7EF' : '#D7DCE5',
             '& .MuiLinearProgress-bar': {
               borderRadius: 99,
-              backgroundColor: progressColor,
+              backgroundColor: progress === -1 ? '#B7BED0' : progressColor,
             },
           }}
         />

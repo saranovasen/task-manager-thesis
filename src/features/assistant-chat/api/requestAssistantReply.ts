@@ -4,13 +4,14 @@ const AI_API_URL = import.meta.env.VITE_AI_API_URL as string | undefined;
 const AI_API_KEY = import.meta.env.VITE_AI_API_KEY as string | undefined;
 
 export class AIRequestError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-    public statusCode?: number
-  ) {
+  code: string;
+  statusCode?: number;
+
+  constructor(code: string, message: string, statusCode?: number) {
     super(message);
     this.name = 'AIRequestError';
+    this.code = code;
+    this.statusCode = statusCode;
   }
 }
 

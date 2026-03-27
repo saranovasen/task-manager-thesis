@@ -38,7 +38,11 @@ export const httpRequest = async <T>(path: string, options: RequestOptions = {})
 
   if (!response.ok) {
     const message =
-      (payload && typeof payload === 'object' && 'message' in payload && String(payload.message)) || 'Request failed';
+      (payload &&
+        typeof payload === 'object' &&
+        ((('message' in payload && payload.message && String(payload.message)) ||
+          ('error' in payload && payload.error && String(payload.error))) as string)) ||
+      'Request failed';
     throw new ApiError(message, response.status, payload);
   }
 

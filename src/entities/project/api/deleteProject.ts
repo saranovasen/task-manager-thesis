@@ -1,8 +1,8 @@
-import type { ProjectItem } from '../model/types';
+import { httpRequest } from '../../../shared/api/httpClient';
 
-export const deleteProject = (projectId: string): ProjectItem => {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
-  // return response.json();
-  return { id: projectId } as ProjectItem;
+export const deleteProject = async (projectId: string, token?: string): Promise<{ ok: boolean }> => {
+  return httpRequest<{ ok: boolean }>(`/projects/${projectId}`, {
+    method: 'DELETE',
+    token,
+  });
 };

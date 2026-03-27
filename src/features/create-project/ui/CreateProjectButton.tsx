@@ -1,11 +1,21 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import type { CreateProjectInput } from '../../../entities/project';
 import type { CreateProjectPayload } from '../model/types';
 
 type CreateProjectButtonProps = {
-  onCreate: (project: CreateProjectInput) => void;
+  onCreate: (project: CreateProjectInput) => Promise<void> | void;
 };
 
 type FormState = {
@@ -32,6 +42,7 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState<FormState>(initialFormState);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const titleError = form.title.trim().length < 2 ? 'Минимум 2 символа' : '';
 
@@ -41,10 +52,12 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
     setIsOpen(false);
     setForm(initialFormState);
     setSubmitAttempted(false);
+    setSubmitError('');
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     setSubmitAttempted(true);
+    setSubmitError('');
 
     if (hasErrors) {
       return;
@@ -56,13 +69,17 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
       dueDate: form.dueDate ? new Date(form.dueDate) : undefined,
     };
 
-    onCreate({
-      title: payload.title,
-      link: payload.link,
-      dueDate: payload.dueDate ? formatDueDate(payload.dueDate) : undefined,
-    });
+    try {
+      await onCreate({
+        title: payload.title,
+        link: payload.link,
+        dueDate: payload.dueDate ? formatDueDate(payload.dueDate) : undefined,
+      });
 
-    closeDialog();
+      closeDialog();
+    } catch {
+      setSubmitError('Не удалось добавить проект. Проверьте, что backend запущен и вы авторизованы.');
+    }
   };
 
   const primaryButtonSx = {
@@ -112,7 +129,10 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
       <Button
         variant="contained"
         startIcon={<AddRoundedIcon />}
-        onClick={() => setIsOpen(true)}
+        onClick={(event) => {
+          event.currentTarget.blur();
+          setIsOpen(true);
+        }}
         sx={{ ...primaryButtonSx, px: 2, fontWeight: 600 }}
       >
         Новый проект
@@ -137,6 +157,8 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
           </Typography>
 
           <Stack spacing={2}>
+            {submitError && <Alert severity="error">{submitError}</Alert>}
+
             <TextField
               label="Название"
               value={form.title}
@@ -171,7 +193,13 @@ export const CreateProjectButton = ({ onCreate }: CreateProjectButtonProps) => {
           <Button onClick={closeDialog} variant="contained" sx={{ ...secondaryButtonSx, fontWeight: 600 }}>
             Отмена
           </Button>
-          <Button variant="contained" onClick={handleCreate} sx={{ ...primaryButtonSx, fontWeight: 600 }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              void handleCreate();
+            }}
+            sx={{ ...primaryButtonSx, fontWeight: 600 }}
+          >
             Добавить
           </Button>
         </DialogActions>

@@ -1,6 +1,8 @@
-import { projectsMock } from '../model/mockData';
+import { httpRequest } from '../../../shared/api/httpClient';
 import type { ProjectItem } from '../model/types';
 
-export const getProjects = async (): Promise<ProjectItem[]> => {
-  return Promise.resolve(projectsMock);
+export const getProjects = async (token?: string): Promise<ProjectItem[]> => {
+  return httpRequest<ProjectItem[]>('/projects', {
+    token,
+  });
 };

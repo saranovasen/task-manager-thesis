@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -9,7 +10,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteProject, useProjects } from '../entities/project';
+import { useProjects } from '../entities/project';
 import type { ProjectItem } from '../entities/project';
 import { CreateProjectButton } from '../features/create-project';
 import { ProjectCard } from '../shared/cards/ProjectCard';
@@ -28,6 +29,7 @@ export const Projects = () => {
   const [deletingProject, setDeletingProject] = useState<ProjectItem | null>(null);
   const [editForm, setEditForm] = useState<EditProjectForm>({ title: '', link: '', dueDate: '' });
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   const titleError = editForm.title.trim().length < 2 ? 'Минимум 2 символа' : '';
 
@@ -74,30 +76,38 @@ export const Projects = () => {
     setSubmitAttempted(false);
   };
 
-  const handleSaveProject = () => {
+  const handleSaveProject = async () => {
     setSubmitAttempted(true);
+    setActionError('');
 
     if (!editingProject || titleError) {
       return;
     }
 
-    updateProject(editingProject.id, {
-      title: editForm.title.trim(),
-      link: editForm.link.trim() || undefined,
-      dueDate: formatDueDate(editForm.dueDate),
-    });
+    try {
+      await updateProject(editingProject.id, {
+        title: editForm.title.trim(),
+        link: editForm.link.trim() || undefined,
+        dueDate: formatDueDate(editForm.dueDate),
+      });
 
-    closeEditDialog();
+      closeEditDialog();
+    } catch {
+      setActionError('Не удалось сохранить проект. Проверьте авторизацию и backend.');
+    }
   };
 
-  const handleConfirmDeleteProject = () => {
+  const handleConfirmDeleteProject = async () => {
     if (!deletingProject) {
       return;
     }
 
-    deleteProject(deletingProject.id);
-    removeProject(deletingProject.id);
-    setDeletingProject(null);
+    try {
+      await removeProject(deletingProject.id);
+      setDeletingProject(null);
+    } catch {
+      setActionError('Не удалось удалить проект. Проверьте авторизацию и backend.');
+    }
   };
 
   const primaryButtonSx = {
@@ -145,6 +155,12 @@ export const Projects = () => {
   return (
     <>
       <Box sx={{ mt: 3, width: '100%' }}>
+        {actionError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {actionError}
+          </Alert>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 2.5 }}>
           <Typography sx={{ color: '#232360', fontSize: 24, fontWeight: 700 }}>Проекты</Typography>
           <CreateProjectButton onCreate={addProject} />
@@ -218,7 +234,13 @@ export const Projects = () => {
           <Button onClick={closeEditDialog} variant="contained" sx={secondaryButtonSx}>
             Отмена
           </Button>
-          <Button onClick={handleSaveProject} variant="contained" sx={primaryButtonSx}>
+          <Button
+            onClick={() => {
+              void handleSaveProject();
+            }}
+            variant="contained"
+            sx={primaryButtonSx}
+          >
             Сохранить
           </Button>
         </DialogActions>
@@ -230,7 +252,9 @@ export const Projects = () => {
         message={`Вы уверены, что хотите удалить проект "${deletingProject?.title}"? Это действие невозможно отменить.`}
         confirmButtonText="Удалить"
         cancelButtonText="Отмена"
-        onConfirm={handleConfirmDeleteProject}
+        onConfirm={() => {
+          void handleConfirmDeleteProject();
+        }}
         onCancel={() => setDeletingProject(null)}
       />
     </>

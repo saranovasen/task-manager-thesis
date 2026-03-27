@@ -1,23 +1,33 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../auth';
 import { getProjectTasks } from '../api/getProjectTasks';
 import type { ProjectTaskItem } from './types';
 
 export const useProjectTasks = (projectId?: string) => {
+  const { accessToken, isAuthenticated, isLoading } = useAuth();
   const [tasks, setTasks] = useState<ProjectTaskItem[]>([]);
 
   useEffect(() => {
-    if (!projectId) {
+    if (isLoading) {
+      return;
+    }
+
+    if (!projectId || !accessToken || !isAuthenticated) {
       setTasks([]);
       return;
     }
 
     const loadTasks = async () => {
-      const data = await getProjectTasks(projectId);
-      setTasks(data);
+      try {
+        const data = await getProjectTasks(projectId, accessToken);
+        setTasks(data);
+      } catch {
+        setTasks([]);
+      }
     };
 
     void loadTasks();
-  }, [projectId]);
+  }, [projectId, accessToken, isAuthenticated, isLoading]);
 
   return { tasks };
 };

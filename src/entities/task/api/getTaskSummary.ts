@@ -1,6 +1,8 @@
-import { taskSummaryMock } from '../model/mockData';
+import { httpRequest } from '../../../shared/api/httpClient';
 import type { TaskSummaryItem } from '../model/types';
 
-export const getTaskSummary = async (): Promise<TaskSummaryItem[]> => {
-  return Promise.resolve(taskSummaryMock);
+export const getTaskSummary = async (token?: string): Promise<TaskSummaryItem[]> => {
+  return httpRequest<TaskSummaryItem[]>('/tasks/summary', {
+    token,
+  });
 };
