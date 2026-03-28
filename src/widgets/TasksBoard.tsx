@@ -32,9 +32,22 @@ type TasksBoardProps = {
   onTaskStatusChange?: (taskId: string, newStatus: ProjectTaskStatus) => void | Promise<void>;
   onTaskCreate?: (payload: CreateTaskPayload) => Promise<ProjectTaskItem>;
   onTaskDelete?: (taskId: string) => Promise<void>;
+  onSubtaskCreate?: (taskId: string, title: string) => Promise<void>;
+  onSubtaskToggle?: (taskId: string, subtaskId: string, isDone: boolean) => Promise<void>;
+  onSubtaskRename?: (taskId: string, subtaskId: string, title: string) => Promise<void>;
+  onSubtaskDelete?: (taskId: string, subtaskId: string) => Promise<void>;
 };
 
-export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDelete }: TasksBoardProps) => {
+export const TasksBoard = ({
+  tasks,
+  onTaskStatusChange,
+  onTaskCreate,
+  onTaskDelete,
+  onSubtaskCreate,
+  onSubtaskToggle,
+  onSubtaskRename,
+  onSubtaskDelete,
+}: TasksBoardProps) => {
   const [localTasks, setLocalTasks] = useState<ProjectTaskItem[]>(tasks);
   const [actionError, setActionError] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -308,8 +321,20 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
     setCreateSubtaskTaskId(taskId);
   };
 
-  const handleCreateSubtask = (title: string) => {
+  const handleCreateSubtask = async (title: string) => {
     if (!createSubtaskTaskId) {
+      return;
+    }
+
+    setActionError('');
+
+    if (onSubtaskCreate) {
+      try {
+        await onSubtaskCreate(createSubtaskTaskId, title);
+        setCreateSubtaskTaskId(null);
+      } catch {
+        setActionError('Не удалось создать подзадачу. Проверьте backend и авторизацию.');
+      }
       return;
     }
 
@@ -326,7 +351,18 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
     setCreateSubtaskTaskId(null);
   };
 
-  const handleAddSubtaskFromDialog = (taskId: string, title: string) => {
+  const handleAddSubtaskFromDialog = async (taskId: string, title: string) => {
+    setActionError('');
+
+    if (onSubtaskCreate) {
+      try {
+        await onSubtaskCreate(taskId, title);
+      } catch {
+        setActionError('Не удалось создать подзадачу. Проверьте backend и авторизацию.');
+      }
+      return;
+    }
+
     setLocalTasks((prevTasks) =>
       prevTasks.map((task) => {
         if (task.id !== taskId) {
@@ -339,6 +375,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
   };
 
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    setActionError('');
+
+    if (onSubtaskToggle) {
+      const currentTask = localTasks.find((task) => task.id === taskId);
+      const currentSubtask = currentTask?.subtasks?.find((subtask) => subtask.id === subtaskId);
+      if (!currentSubtask) {
+        return;
+      }
+
+      void onSubtaskToggle(taskId, subtaskId, !currentSubtask.isDone).catch(() => {
+        setActionError('Не удалось обновить подзадачу. Проверьте backend и авторизацию.');
+      });
+      return;
+    }
+
     setLocalTasks((prevTasks) =>
       prevTasks.map((task) => {
         if (task.id !== taskId) {
@@ -462,6 +513,15 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
   };
 
   const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
+    setActionError('');
+
+    if (onSubtaskDelete) {
+      void onSubtaskDelete(taskId, subtaskId).catch(() => {
+        setActionError('Не удалось удалить подзадачу. Проверьте backend и авторизацию.');
+      });
+      return;
+    }
+
     setLocalTasks((prevTasks) =>
       prevTasks.map((task) => {
         if (task.id !== taskId) {
@@ -483,6 +543,37 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
           subtasks: sourceSubtasks.filter((subtask) => subtask.id !== subtaskId),
           checklistDone: undefined,
           checklistTotal: undefined,
+        };
+      })
+    );
+  };
+
+  const handleRenameSubtask = (taskId: string, subtaskId: string, title: string) => {
+    setActionError('');
+
+    if (onSubtaskRename) {
+      void onSubtaskRename(taskId, subtaskId, title).catch(() => {
+        setActionError('Не удалось переименовать подзадачу. Проверьте backend и авторизацию.');
+      });
+      return;
+    }
+
+    setLocalTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+
+        return {
+          ...task,
+          subtasks: (task.subtasks ?? []).map((subtask) =>
+            subtask.id === subtaskId
+              ? {
+                  ...subtask,
+                  title,
+                }
+              : subtask
+          ),
         };
       })
     );
@@ -550,8 +641,11 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
         open={Boolean(selectedTaskId)}
         task={selectedTask}
         onClose={() => setSelectedTaskId(null)}
-        onAddSubtask={handleAddSubtaskFromDialog}
+        onAddSubtask={(taskId, title) => {
+          void handleAddSubtaskFromDialog(taskId, title);
+        }}
         onToggleSubtask={handleToggleSubtask}
+        onRenameSubtask={handleRenameSubtask}
         onChangeDeadline={handleEditDeadline}
         onChangeDescription={handleChangeDescription}
         onChangeCategory={handleChangeCategory}
@@ -573,7 +667,9 @@ export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDele
         open={Boolean(createSubtaskTaskId)}
         taskTitle={createSubtaskTask?.title}
         onClose={() => setCreateSubtaskTaskId(null)}
-        onCreate={(payload) => handleCreateSubtask(payload.title)}
+        onCreate={(payload) => {
+          void handleCreateSubtask(payload.title);
+        }}
       />
     </DndContext>
   );

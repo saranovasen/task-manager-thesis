@@ -1,20 +1,17 @@
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { IconButton } from '@mui/material';
 import { useState } from 'react';
-import { deleteSubtask } from '../../../entities/task';
 import { ConfirmDeleteDialog } from '../../../shared/dialogs';
 
 type DeleteSubtaskButtonProps = {
-  subtaskId: string;
   subtaskTitle: string;
   onDelete: () => void;
 };
 
-export const DeleteSubtaskButton = ({ subtaskId, subtaskTitle, onDelete }: DeleteSubtaskButtonProps) => {
+export const DeleteSubtaskButton = ({ subtaskTitle, onDelete }: DeleteSubtaskButtonProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleConfirmDelete = () => {
-    deleteSubtask(subtaskId);
     setDeleteDialogOpen(false);
     onDelete();
   };

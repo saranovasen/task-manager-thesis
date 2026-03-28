@@ -21,7 +21,8 @@ export const TasksPage = () => {
 
   const [project, setProject] = useState<ProjectItem | null>(state?.project ?? null);
   const [isProjectLoading, setIsProjectLoading] = useState(!state?.project && Boolean(projectId));
-  const { tasks, addTask, updateTaskStatus, removeTask } = useProjectTasks(projectId);
+  const { tasks, addTask, updateTaskStatus, removeTask, addSubtask, toggleSubtask, renameSubtask, removeSubtask } =
+    useProjectTasks(projectId);
 
   useEffect(() => {
     if (!projectId || state?.project || isLoading || !isAuthenticated || !accessToken) {
@@ -78,6 +79,22 @@ export const TasksPage = () => {
     await removeTask(taskId);
   };
 
+  const handleSubtaskCreate = async (taskId: string, title: string) => {
+    await addSubtask(taskId, title);
+  };
+
+  const handleSubtaskToggle = async (taskId: string, subtaskId: string, isDone: boolean) => {
+    await toggleSubtask(taskId, subtaskId, isDone);
+  };
+
+  const handleSubtaskRename = async (taskId: string, subtaskId: string, title: string) => {
+    await renameSubtask(taskId, subtaskId, title);
+  };
+
+  const handleSubtaskDelete = async (taskId: string, subtaskId: string) => {
+    await removeSubtask(taskId, subtaskId);
+  };
+
   return (
     <Box sx={{ mt: 3, width: '100%' }}>
       <Typography sx={{ color: '#111111', fontSize: 30, fontWeight: 700, mb: 3, lineHeight: 1.1 }}>
@@ -92,6 +109,10 @@ export const TasksPage = () => {
         onTaskCreate={handleCreateTask}
         onTaskStatusChange={handleTaskStatusChange}
         onTaskDelete={handleTaskDelete}
+        onSubtaskCreate={handleSubtaskCreate}
+        onSubtaskToggle={handleSubtaskToggle}
+        onSubtaskRename={handleSubtaskRename}
+        onSubtaskDelete={handleSubtaskDelete}
       />
     </Box>
   );

@@ -1,8 +1,9 @@
-import type { ProjectSubtaskItem } from '../model/types';
+import { httpRequest } from '../../../shared/api/httpClient';
+import type { ProjectTaskItem } from '../model/types';
 
-export const deleteSubtask = (subtaskId: string): ProjectSubtaskItem => {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/subtasks/${subtaskId}`, { method: 'DELETE' });
-  // return response.json();
-  return { id: subtaskId } as ProjectSubtaskItem;
+export const deleteSubtask = async (taskId: string, subtaskId: string, token?: string) => {
+  return httpRequest<ProjectTaskItem>(`/tasks/${taskId}/subtasks/${subtaskId}`, {
+    method: 'DELETE',
+    token,
+  });
 };

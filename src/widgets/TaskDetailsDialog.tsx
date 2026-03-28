@@ -35,6 +35,7 @@ type TaskDetailsDialogProps = {
   onClose: () => void;
   onAddSubtask: (taskId: string, title: string) => void;
   onToggleSubtask: (taskId: string, subtaskId: string) => void;
+  onRenameSubtask: (taskId: string, subtaskId: string, title: string) => void;
   onChangeDeadline: (taskId: string, nextDate: string) => void;
   onChangeDescription: (taskId: string, nextDescription: string) => void;
   onChangeCategory: (taskId: string, nextCategory: string) => void;
@@ -49,6 +50,7 @@ export const TaskDetailsDialog = ({
   onClose,
   onAddSubtask,
   onToggleSubtask,
+  onRenameSubtask,
   onChangeDeadline,
   onChangeDescription,
   onChangeCategory,
@@ -64,6 +66,8 @@ export const TaskDetailsDialog = ({
   const [categoryValue, setCategoryValue] = useState('');
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
   const [saveChangesDialogOpen, setSaveChangesDialogOpen] = useState(false);
   const [deleteSubtaskDialogOpen, setDeleteSubtaskDialogOpen] = useState(false);
   const [subtaskToDelete, setSubtaskToDelete] = useState<{ taskId: string; subtaskId: string; title: string } | null>(
@@ -128,8 +132,15 @@ export const TaskDetailsDialog = ({
       setDescriptionValue(task?.description ?? '');
       setCategoryValue(task?.category ?? '');
       setCategoryColorValue(task?.categoryColor ?? '#5051F9');
+      setEditingSubtaskId(null);
+      setEditingSubtaskTitle('');
     }
   }, [open, task?.dateLabel, task?.description, task?.category, task?.categoryColor]);
+
+  useEffect(() => {
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle('');
+  }, [task?.id]);
 
   const primaryButtonSx = {
     minWidth: 129,
@@ -180,6 +191,35 @@ export const TaskDetailsDialog = ({
 
     onAddSubtask(task.id, newSubtaskTitle.trim());
     setNewSubtaskTitle('');
+  };
+
+  const handleStartEditSubtask = (subtaskId: string, title: string) => {
+    setEditingSubtaskId(subtaskId);
+    setEditingSubtaskTitle(title);
+  };
+
+  const handleCancelEditSubtask = () => {
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle('');
+  };
+
+  const handleSaveSubtaskTitle = (subtaskId: string) => {
+    if (!task) {
+      return;
+    }
+
+    const trimmedTitle = editingSubtaskTitle.trim();
+    if (!trimmedTitle) {
+      handleCancelEditSubtask();
+      return;
+    }
+
+    const currentTitle = task.subtasks?.find((subtask) => subtask.id === subtaskId)?.title ?? '';
+    if (trimmedTitle !== currentTitle) {
+      onRenameSubtask(task.id, subtaskId, trimmedTitle);
+    }
+
+    handleCancelEditSubtask();
   };
 
   const normalizedDescription = descriptionValue.trim() || 'Описание не добавлено';
@@ -541,17 +581,55 @@ export const TaskDetailsDialog = ({
                       },
                     }}
                   />
-                  <ListItemText
-                    primary={subtask.title}
-                    primaryTypographyProps={{
-                      sx: {
-                        color: '#1F2564',
-                        textDecoration: subtask.isDone ? 'line-through' : 'none',
-                        opacity: subtask.isDone ? 0.6 : 1,
-                        fontSize: 14,
-                      },
-                    }}
-                  />
+                  {editingSubtaskId === subtask.id ? (
+                    <TextField
+                      size="small"
+                      value={editingSubtaskTitle}
+                      onChange={(event) => setEditingSubtaskTitle(event.target.value)}
+                      onBlur={() => handleSaveSubtaskTitle(subtask.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleSaveSubtaskTitle(subtask.id);
+                        }
+
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          handleCancelEditSubtask();
+                        }
+                      }}
+                      autoFocus
+                      sx={{
+                        minWidth: 0,
+                        flex: 1,
+                        ml: 0.5,
+                        '& .MuiOutlinedInput-root': {
+                          height: 32,
+                          fontSize: 14,
+                          '& fieldset': {
+                            borderColor: '#D7DDE8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#5051F9',
+                          },
+                        },
+                      }}
+                    />
+                  ) : (
+                    <ListItemText
+                      onClick={() => handleStartEditSubtask(subtask.id, subtask.title)}
+                      primary={subtask.title}
+                      primaryTypographyProps={{
+                        sx: {
+                          color: '#1F2564',
+                          textDecoration: subtask.isDone ? 'line-through' : 'none',
+                          opacity: subtask.isDone ? 0.6 : 1,
+                          fontSize: 14,
+                          cursor: 'text',
+                        },
+                      }}
+                    />
+                  )}
                 </Box>
                 <IconButton
                   className="subtask-delete-btn"

@@ -6,6 +6,8 @@ export { getFinishedTasksDynamics } from './api/getFinishedTasksDynamics';
 export { getProjectTasks } from './api/getProjectTasks';
 export { createTaskRequest } from './api/createTask';
 export { updateTaskRequest } from './api/updateTask';
+export { createSubtaskRequest } from './api/createSubtask';
+export { updateSubtaskRequest } from './api/updateSubtask';
 export { deleteTask } from './api/deleteTask';
 export { deleteSubtask } from './api/deleteSubtask';
 export type {
