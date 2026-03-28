@@ -3,6 +3,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { useAuth } from '../entities/auth';
 import { getProjects, type ProjectItem } from '../entities/project';
 import { useProjectTasks, type ProjectTaskStatus } from '../entities/task';
 import { TasksBoard } from '../widgets/TasksBoard';
@@ -16,25 +17,29 @@ export const TasksPage = () => {
   const { projectId } = useParams();
   const location = useLocation();
   const state = location.state as TasksPageLocationState | null;
+  const { accessToken, isAuthenticated, isLoading } = useAuth();
 
   const [project, setProject] = useState<ProjectItem | null>(state?.project ?? null);
   const [isProjectLoading, setIsProjectLoading] = useState(!state?.project && Boolean(projectId));
   const { tasks, addTask, updateTaskStatus, removeTask } = useProjectTasks(projectId);
 
   useEffect(() => {
-    if (!projectId || state?.project) {
+    if (!projectId || state?.project || isLoading || !isAuthenticated || !accessToken) {
       return;
     }
 
     const loadProject = async () => {
       setIsProjectLoading(true);
-      const projects = await getProjects();
-      setProject(projects.find((item) => item.id === projectId) ?? null);
-      setIsProjectLoading(false);
+      try {
+        const projects = await getProjects(accessToken);
+        setProject(projects.find((item) => item.id === projectId) ?? null);
+      } finally {
+        setIsProjectLoading(false);
+      }
     };
 
     void loadProject();
-  }, [projectId, state?.project]);
+  }, [projectId, state?.project, accessToken, isAuthenticated, isLoading]);
 
   if (!projectId) {
     return <Typography sx={{ color: '#232360', fontSize: 20, mt: 3 }}>Проект не выбран</Typography>;

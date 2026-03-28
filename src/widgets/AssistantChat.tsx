@@ -11,10 +11,10 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 export const AssistantChat = () => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const userAvatarLetter = user?.email?.trim().charAt(0).toUpperCase() || 'U';
   const { messages, prompt, setPrompt, isSending, hasPrompt, canSend, handleSend } = useAssistantChat({
-    accessToken: user ? undefined : undefined,
+    accessToken: accessToken ?? undefined,
     context: {
       userId: user?.id,
       activeTasks: undefined,
