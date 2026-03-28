@@ -9,6 +9,12 @@ export type LoginPayload = {
   password: string;
 };
 
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export type LoginResponse = {
   accessToken: string;
   user: AuthUser;

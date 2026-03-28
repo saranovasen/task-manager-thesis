@@ -8,7 +8,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../entities/project';
 import type { ProjectItem } from '../entities/project';
@@ -22,7 +22,7 @@ type EditProjectForm = {
   dueDate: string;
 };
 
-export const Projects = () => {
+const ProjectsComponent = () => {
   const { projects, addProject, removeProject, updateProject } = useProjects();
   const navigate = useNavigate();
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
@@ -166,25 +166,29 @@ export const Projects = () => {
           <CreateProjectButton onCreate={addProject} />
         </Box>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          {projects.map((project) => (
-            <Box key={project.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ flex: 1 }}>
-                <ProjectCard
-                  title={project.title}
-                  link={project.link}
-                  tasks={project.tasks}
-                  dueDate={project.dueDate}
-                  progress={project.progress}
-                  progressColor={project.progressColor}
-                  onClick={() => navigate(`/projects/${project.id}/tasks`, { state: { project } })}
-                  onEditClick={() => openEditDialog(project)}
-                  onDeleteClick={() => setDeletingProject(project)}
-                />
+        {projects.length === 0 ? (
+          <Typography sx={{ color: '#6F7F99', fontSize: 15, textAlign: 'center', py: 4 }}>Еще нет проектов</Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            {projects.map((project) => (
+              <Box key={project.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ flex: 1 }}>
+                  <ProjectCard
+                    title={project.title}
+                    link={project.link}
+                    tasks={project.tasks}
+                    dueDate={project.dueDate}
+                    progress={project.progress}
+                    progressColor={project.progressColor}
+                    onClick={() => navigate(`/projects/${project.id}/tasks`, { state: { project } })}
+                    onEditClick={() => openEditDialog(project)}
+                    onDeleteClick={() => setDeletingProject(project)}
+                  />
+                </Box>
               </Box>
-            </Box>
-          ))}
-        </Box>
+            ))}
+          </Box>
+        )}
       </Box>
 
       <Dialog
@@ -260,3 +264,5 @@ export const Projects = () => {
     </>
   );
 };
+
+export const Projects = memo(ProjectsComponent);

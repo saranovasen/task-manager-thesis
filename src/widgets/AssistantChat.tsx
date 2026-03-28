@@ -12,6 +12,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 export const AssistantChat = () => {
   const { user } = useAuth();
+  const userAvatarLetter = user?.email?.trim().charAt(0).toUpperCase() || 'U';
   const { messages, prompt, setPrompt, isSending, hasPrompt, canSend, handleSend } = useAssistantChat({
     accessToken: user ? undefined : undefined,
     context: {
@@ -55,7 +56,7 @@ export const AssistantChat = () => {
                     {message.text}
                   </Typography>
                 </Box>
-                <Avatar sx={{ width: 24, height: 24, fontSize: 12, bgcolor: '#C9A187' }}>S</Avatar>
+                <Avatar sx={{ width: 24, height: 24, fontSize: 12, bgcolor: '#C9A187' }}>{userAvatarLetter}</Avatar>
               </Box>
             );
           }

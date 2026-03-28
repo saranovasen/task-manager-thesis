@@ -2,7 +2,7 @@ import { Box } from '@mui/system';
 import { SecondaryText } from '../typography/SecondaryText';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
-import { useId } from 'react';
+import { memo, useId } from 'react';
 import {
   tasksSummaryCardAmountSx,
   tasksSummaryCardAreaSvgSx,
@@ -24,7 +24,7 @@ type TaskSummaryCard = {
   lineColor: string;
 };
 
-export const TaskSummaryCard = (props: TaskSummaryCard) => {
+const TaskSummaryCardComponent = (props: TaskSummaryCard) => {
   const chartId = useId().replace(/:/g, '');
   const chartTop = 8;
   const chartBottom = 36;
@@ -123,3 +123,5 @@ export const TaskSummaryCard = (props: TaskSummaryCard) => {
     </Box>
   );
 };
+
+export const TaskSummaryCard = memo(TaskSummaryCardComponent);

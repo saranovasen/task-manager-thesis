@@ -10,7 +10,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 
 type ProjectCardProps = {
   title: string;
@@ -25,7 +25,7 @@ type ProjectCardProps = {
   onDeleteClick?: () => void;
 };
 
-export const ProjectCard = ({
+const ProjectCardComponent = ({
   title,
   link,
   tasks,
@@ -194,3 +194,5 @@ export const ProjectCard = ({
     </Box>
   );
 };
+
+export const ProjectCard = memo(ProjectCardComponent);

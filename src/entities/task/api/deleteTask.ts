@@ -1,8 +1,8 @@
-import type { ProjectTaskItem } from '../model/types';
+import { httpRequest } from '../../../shared/api/httpClient';
 
-export const deleteTask = (taskId: string): ProjectTaskItem => {
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
-  // return response.json();
-  return { id: taskId } as ProjectTaskItem;
+export const deleteTask = async (taskId: string, token?: string) => {
+  return httpRequest<{ ok: true }>(`/tasks/${taskId}`, {
+    method: 'DELETE',
+    token,
+  });
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth';
 import { createProject } from '../api/createProject';
 import { deleteProject } from '../api/deleteProject';
@@ -10,6 +10,20 @@ export const useProjects = () => {
   const { accessToken, isAuthenticated, isLoading } = useAuth();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
 
+  const loadProjects = useCallback(async () => {
+    if (!accessToken || !isAuthenticated) {
+      setProjects([]);
+      return;
+    }
+
+    try {
+      const data = await getProjects(accessToken);
+      setProjects(data);
+    } catch {
+      setProjects([]);
+    }
+  }, [accessToken, isAuthenticated]);
+
   useEffect(() => {
     if (isLoading) {
       return;
@@ -20,53 +34,53 @@ export const useProjects = () => {
       return;
     }
 
-    const loadProjects = async () => {
-      try {
-        const data = await getProjects(accessToken);
-        setProjects(data);
-      } catch {
-        setProjects([]);
-      }
-    };
-
     void loadProjects();
-  }, [accessToken, isAuthenticated, isLoading]);
+  }, [accessToken, isAuthenticated, isLoading, loadProjects]);
 
-  const addProject = async (newProject: CreateProjectInput) => {
-    if (!accessToken || !isAuthenticated) {
-      throw new Error('Unauthorized');
-    }
+  const addProject = useCallback(
+    async (newProject: CreateProjectInput) => {
+      if (!accessToken || !isAuthenticated) {
+        throw new Error('Unauthorized');
+      }
 
-    const createdProject = await createProject(newProject, accessToken);
-    setProjects((prevProjects) => [createdProject, ...prevProjects]);
-  };
+      const createdProject = await createProject(newProject, accessToken);
+      setProjects((prevProjects) => [createdProject, ...prevProjects]);
+    },
+    [accessToken, isAuthenticated]
+  );
 
-  const removeProject = async (projectId: string) => {
-    if (!accessToken || !isAuthenticated) {
-      throw new Error('Unauthorized');
-    }
+  const removeProject = useCallback(
+    async (projectId: string) => {
+      if (!accessToken || !isAuthenticated) {
+        throw new Error('Unauthorized');
+      }
 
-    await deleteProject(projectId, accessToken);
-    setProjects((prevProjects) => prevProjects.filter((p) => p.id !== projectId));
-  };
+      await deleteProject(projectId, accessToken);
+      setProjects((prevProjects) => prevProjects.filter((p) => p.id !== projectId));
+    },
+    [accessToken, isAuthenticated]
+  );
 
-  const updateProject = async (projectId: string, nextData: CreateProjectInput) => {
-    if (!accessToken || !isAuthenticated) {
-      throw new Error('Unauthorized');
-    }
+  const updateProject = useCallback(
+    async (projectId: string, nextData: CreateProjectInput) => {
+      if (!accessToken || !isAuthenticated) {
+        throw new Error('Unauthorized');
+      }
 
-    const updatedProject = await updateProjectRequest(projectId, nextData, accessToken);
+      const updatedProject = await updateProjectRequest(projectId, nextData, accessToken);
 
-    setProjects((prevProjects) =>
-      prevProjects.map((project) => {
-        if (project.id !== projectId) {
-          return project;
-        }
+      setProjects((prevProjects) =>
+        prevProjects.map((project) => {
+          if (project.id !== projectId) {
+            return project;
+          }
 
-        return updatedProject;
-      })
-    );
-  };
+          return updatedProject;
+        })
+      );
+    },
+    [accessToken, isAuthenticated]
+  );
 
   return { projects, addProject, removeProject, updateProject };
 };

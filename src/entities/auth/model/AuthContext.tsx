@@ -2,7 +2,9 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { getMe } from '../api/getMe';
 import { login as loginRequest } from '../api/login';
 import { logout as logoutRequest } from '../api/logout';
-import type { AuthUser, LoginPayload } from './types';
+import { register as registerRequest } from '../api/register';
+import { ApiError } from '../../../shared/api/httpClient';
+import type { AuthUser, LoginPayload, RegisterPayload } from './types';
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -10,6 +12,7 @@ type AuthContextValue = {
   isLoading: boolean;
   accessToken: string | null;
   login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -18,13 +21,15 @@ const TOKEN_KEY = 'tm_access_token';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const initialToken = localStorage.getItem(TOKEN_KEY);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
-  const [isLoading, setIsLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(initialToken);
+  const [isLoading, setIsLoading] = useState(Boolean(initialToken));
 
   useEffect(() => {
     const bootstrap = async () => {
       if (!token) {
+        setIsLoading(false);
         return;
       }
 
@@ -32,10 +37,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const profile = await getMe(token);
         setUser(profile);
-      } catch {
+      } catch (error) {
         setUser(null);
-        setToken(null);
-        localStorage.removeItem(TOKEN_KEY);
+
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+          setToken(null);
+          localStorage.removeItem(TOKEN_KEY);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -48,6 +56,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const response = await loginRequest(payload);
+      setToken(response.accessToken);
+      setUser(response.user);
+      localStorage.setItem(TOKEN_KEY, response.accessToken);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (payload: RegisterPayload) => {
+    setIsLoading(true);
+    try {
+      const response = await registerRequest(payload);
       setToken(response.accessToken);
       setUser(response.user);
       localStorage.setItem(TOKEN_KEY, response.accessToken);
@@ -77,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       accessToken: token,
       login,
+      register,
       logout,
     }),
     [user, isLoading, token]

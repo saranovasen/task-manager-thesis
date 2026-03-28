@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import {
   DndContext,
   DragOverlay,
@@ -28,11 +29,14 @@ const columnMeta: Array<{ key: ProjectTaskStatus; label: string }> = [
 
 type TasksBoardProps = {
   tasks: ProjectTaskItem[];
-  onTaskStatusChange?: (taskId: string, newStatus: ProjectTaskStatus) => void;
+  onTaskStatusChange?: (taskId: string, newStatus: ProjectTaskStatus) => void | Promise<void>;
+  onTaskCreate?: (payload: CreateTaskPayload) => Promise<ProjectTaskItem>;
+  onTaskDelete?: (taskId: string) => Promise<void>;
 };
 
-export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
+export const TasksBoard = ({ tasks, onTaskStatusChange, onTaskCreate, onTaskDelete }: TasksBoardProps) => {
   const [localTasks, setLocalTasks] = useState<ProjectTaskItem[]>(tasks);
+  const [actionError, setActionError] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState<ProjectTaskStatus>('queue');
@@ -240,7 +244,9 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     });
 
     if (draggedTask.status !== nextStatus) {
-      onTaskStatusChange?.(draggedTaskId, nextStatus);
+      Promise.resolve(onTaskStatusChange?.(draggedTaskId, nextStatus)).catch(() => {
+        setActionError('Не удалось обновить статус задачи. Проверьте backend и авторизацию.');
+      });
     }
 
     finishDrag();
@@ -251,17 +257,28 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
     setIsCreateTaskOpen(true);
   };
 
-  const handleCreateTask = (payload: CreateTaskPayload) => {
-    const baseTask = localTasks[0];
+  const handleCreateTask = async (payload: CreateTaskPayload) => {
+    setActionError('');
 
-    const newTask: ProjectTaskItem = createTask({
-      projectId: baseTask?.projectId ?? '1',
-      payload,
-    });
+    let newTask: ProjectTaskItem;
 
-    setLocalTasks((prev) => [newTask, ...prev]);
-    setIsCreateTaskOpen(false);
-    setSelectedTaskId(newTask.id);
+    try {
+      if (onTaskCreate) {
+        newTask = await onTaskCreate(payload);
+      } else {
+        const baseTask = localTasks[0];
+        newTask = createTask({
+          projectId: baseTask?.projectId ?? '1',
+          payload,
+        });
+        setLocalTasks((prev) => [newTask, ...prev]);
+      }
+
+      setIsCreateTaskOpen(false);
+      setSelectedTaskId(newTask.id);
+    } catch {
+      setActionError('Не удалось создать задачу. Проверьте backend и авторизацию.');
+    }
   };
 
   const addSubtaskToTask = (task: ProjectTaskItem, title: string): ProjectTaskItem => {
@@ -393,6 +410,21 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
   };
 
   const handleDeleteTask = (taskId: string) => {
+    setActionError('');
+
+    if (onTaskDelete) {
+      void onTaskDelete(taskId)
+        .then(() => {
+          if (selectedTaskId === taskId) {
+            setSelectedTaskId(null);
+          }
+        })
+        .catch(() => {
+          setActionError('Не удалось удалить задачу. Проверьте backend и авторизацию.');
+        });
+      return;
+    }
+
     setLocalTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
     if (selectedTaskId === taskId) {
       setSelectedTaskId(null);
@@ -475,6 +507,12 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
       onDragEnd={handleDragEnd}
       collisionDetection={closestCorners}
     >
+      {actionError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {actionError}
+        </Alert>
+      )}
+
       <Box
         sx={{
           display: 'grid',
@@ -526,7 +564,9 @@ export const TasksBoard = ({ tasks, onTaskStatusChange }: TasksBoardProps) => {
         open={isCreateTaskOpen}
         status={createTaskStatus}
         onClose={() => setIsCreateTaskOpen(false)}
-        onCreate={handleCreateTask}
+        onCreate={(payload) => {
+          void handleCreateTask(payload);
+        }}
       />
 
       <CreateSubtaskDialog

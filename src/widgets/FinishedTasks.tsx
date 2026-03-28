@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useFinishedTasksDynamics, type TaskPeriod } from '../entities/task';
 import {
   finishedTasksChartContainerSx,
@@ -74,7 +74,7 @@ const areaPath = (points: { x: number; y: number }[]) => {
   return `${line} L ${last.x} ${baseline} L ${first.x} ${baseline} Z`;
 };
 
-export const FinishedTasks = () => {
+const FinishedTasksComponent = () => {
   const { period, setPeriod, dynamics: activeDataset } = useFinishedTasksDynamics();
 
   const yMax = useMemo(() => {
@@ -200,3 +200,5 @@ export const FinishedTasks = () => {
     </Box>
   );
 };
+
+export const FinishedTasks = memo(FinishedTasksComponent);

@@ -13,7 +13,7 @@ type UseAssistantChatOptions = {
 };
 
 export const useAssistantChat = (options: UseAssistantChatOptions = {}) => {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
   const [prompt, setPrompt] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -84,7 +84,7 @@ export const useAssistantChat = (options: UseAssistantChatOptions = {}) => {
   }, [prompt, isSending, options.accessToken, options.context]);
 
   const clearMessages = useCallback(() => {
-    setMessages(initialMessages);
+    setMessages([...initialMessages]);
     setPrompt('');
   }, []);
 

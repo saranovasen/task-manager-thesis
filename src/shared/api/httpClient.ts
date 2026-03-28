@@ -15,16 +15,18 @@ type RequestOptions = {
   body?: unknown;
   token?: string | null;
   headers?: Record<string, string>;
+  cache?: RequestCache;
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
 
 export const httpRequest = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
-  const { method = 'GET', body, token, headers } = options;
+  const { method = 'GET', body, token, headers, cache } = options;
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
+    ...(cache ? { cache } : {}),
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
