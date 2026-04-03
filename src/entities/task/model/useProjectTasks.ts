@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth';
 import { createTaskRequest } from '../api/createTask';
 import { createSubtaskRequest } from '../api/createSubtask';
@@ -14,6 +14,20 @@ export const useProjectTasks = (projectId?: string) => {
   const { accessToken, isAuthenticated, isLoading } = useAuth();
   const [tasks, setTasks] = useState<ProjectTaskItem[]>([]);
 
+  const loadTasks = useCallback(async () => {
+    if (!projectId || !accessToken || !isAuthenticated) {
+      setTasks([]);
+      return;
+    }
+
+    try {
+      const data = await getProjectTasks(projectId, accessToken);
+      setTasks(data);
+    } catch {
+      setTasks([]);
+    }
+  }, [projectId, accessToken, isAuthenticated]);
+
   useEffect(() => {
     if (isLoading) {
       return;
@@ -24,17 +38,20 @@ export const useProjectTasks = (projectId?: string) => {
       return;
     }
 
-    const loadTasks = async () => {
-      try {
-        const data = await getProjectTasks(projectId, accessToken);
-        setTasks(data);
-      } catch {
-        setTasks([]);
-      }
+    void loadTasks();
+  }, [projectId, accessToken, isAuthenticated, isLoading, loadTasks]);
+
+  useEffect(() => {
+    const handleTasksChanged = () => {
+      void loadTasks();
     };
 
-    void loadTasks();
-  }, [projectId, accessToken, isAuthenticated, isLoading]);
+    window.addEventListener('tasks:changed', handleTasksChanged);
+
+    return () => {
+      window.removeEventListener('tasks:changed', handleTasksChanged);
+    };
+  }, [loadTasks]);
 
   const addTask = async (payload: {
     title: string;

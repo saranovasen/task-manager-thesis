@@ -37,6 +37,18 @@ export const useProjects = () => {
     void loadProjects();
   }, [accessToken, isAuthenticated, isLoading, loadProjects]);
 
+  useEffect(() => {
+    const handleTasksChanged = () => {
+      void loadProjects();
+    };
+
+    window.addEventListener('tasks:changed', handleTasksChanged);
+
+    return () => {
+      window.removeEventListener('tasks:changed', handleTasksChanged);
+    };
+  }, [loadProjects]);
+
   const addProject = useCallback(
     async (newProject: CreateProjectInput) => {
       if (!accessToken || !isAuthenticated) {

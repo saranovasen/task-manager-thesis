@@ -1,6 +1,8 @@
 import type { AssistantRequest, AssistantResponse } from '../model/types';
 
 const AI_API_URL = import.meta.env.VITE_AI_API_URL as string | undefined;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
+const AI_CHAT_FALLBACK_URL = `${API_BASE_URL}/ai/chat`;
 const AI_API_KEY = import.meta.env.VITE_AI_API_KEY as string | undefined;
 
 export class AIRequestError extends Error {
@@ -19,9 +21,7 @@ export const requestAssistantReply = async (
   request: AssistantRequest,
   accessToken?: string
 ): Promise<AssistantResponse> => {
-  if (!AI_API_URL) {
-    throw new AIRequestError('NO_API_URL', 'Укажите VITE_AI_API_URL для подключения AI.');
-  }
+  const targetUrl = AI_API_URL || AI_CHAT_FALLBACK_URL;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export const requestAssistantReply = async (
   }
 
   try {
-    const response = await fetch(AI_API_URL, {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(request),
@@ -56,6 +56,7 @@ export const requestAssistantReply = async (
       message: data.message ?? 'Пустой ответ от AI.',
       confidence: data.confidence,
       suggestions: data.suggestions,
+      effects: data.effects,
     };
   } catch (error) {
     if (error instanceof AIRequestError) {

@@ -22,4 +22,7 @@ export type AssistantResponse = {
   message: string;
   confidence?: number;
   suggestions?: string[];
+  effects?: {
+    tasksChanged?: boolean;
+  };
 };

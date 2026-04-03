@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputBase from '@mui/material/InputBase';
 import Typography from '@mui/material/Typography';
+import { useEffect, useRef } from 'react';
 import { ASSISTANT_CHAT_TOP_OFFSET } from '../features/assistant-chat/model/constants';
 import { useAssistantChat } from '../features/assistant-chat/model/useAssistantChat';
 import { useAuth } from '../entities/auth';
@@ -11,6 +12,8 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 export const AssistantChat = () => {
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const prevMessagesCountRef = useRef(0);
   const { user, accessToken } = useAuth();
   const userAvatarLetter = user?.email?.trim().charAt(0).toUpperCase() || 'U';
   const { messages, prompt, setPrompt, isSending, hasPrompt, canSend, handleSend } = useAssistantChat({
@@ -21,6 +24,22 @@ export const AssistantChat = () => {
       activeProjects: undefined,
     },
   });
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const isInitialRender = prevMessagesCountRef.current === 0;
+    const hasNewMessages = messages.length > prevMessagesCountRef.current;
+
+    if (isInitialRender || hasNewMessages || isSending) {
+      container.scrollTop = container.scrollHeight;
+    }
+
+    prevMessagesCountRef.current = messages.length;
+  }, [messages, isSending]);
 
   return (
     <Box
@@ -43,7 +62,10 @@ export const AssistantChat = () => {
         <Typography sx={{ color: '#232360', fontSize: 20, lineHeight: 1.1, fontWeight: 500 }}>ИИ ассистент</Typography>
       </Box>
 
-      <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2, pr: 0.5 }}>
+      <Box
+        ref={messagesContainerRef}
+        sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2, pr: 0.5 }}
+      >
         {messages.map((message) => {
           if (message.role === 'user') {
             return (

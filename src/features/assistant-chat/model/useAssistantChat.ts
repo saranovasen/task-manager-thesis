@@ -1,7 +1,33 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { requestAssistantReply, AIRequestError } from '../api/requestAssistantReply';
 import { initialMessages } from './constants';
 import type { ChatMessage, AssistantRequest } from './types';
+
+const CHAT_STORAGE_PREFIX = 'assistant-chat-history';
+
+const getStorageKey = (userId?: string) => `${CHAT_STORAGE_PREFIX}:${userId ?? 'anonymous'}`;
+
+const readStoredMessages = (userId?: string): ChatMessage[] | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getStorageKey(userId));
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as ChatMessage[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
 
 type UseAssistantChatOptions = {
   accessToken?: string;
@@ -13,12 +39,30 @@ type UseAssistantChatOptions = {
 };
 
 export const useAssistantChat = (options: UseAssistantChatOptions = {}) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
+  const userId = options.context?.userId;
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const stored = readStoredMessages(userId);
+    return stored ?? [...initialMessages];
+  });
   const [prompt, setPrompt] = useState('');
   const [isSending, setIsSending] = useState(false);
 
   const hasPrompt = useMemo(() => prompt.trim().length > 0, [prompt]);
   const canSend = useMemo(() => hasPrompt && !isSending, [hasPrompt, isSending]);
+
+  useEffect(() => {
+    const stored = readStoredMessages(userId);
+    setMessages(stored ?? [...initialMessages]);
+  }, [userId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(getStorageKey(userId), JSON.stringify(messages));
+  }, [messages, userId]);
 
   const handleSend = useCallback(async () => {
     const nextPrompt = prompt.trim();
@@ -44,6 +88,10 @@ export const useAssistantChat = (options: UseAssistantChatOptions = {}) => {
       };
 
       const response = await requestAssistantReply(request, options.accessToken);
+
+      if (response.effects?.tasksChanged) {
+        window.dispatchEvent(new CustomEvent('tasks:changed'));
+      }
 
       const assistantMessage: ChatMessage = {
         id: `${Date.now()}-a`,
@@ -86,7 +134,11 @@ export const useAssistantChat = (options: UseAssistantChatOptions = {}) => {
   const clearMessages = useCallback(() => {
     setMessages([...initialMessages]);
     setPrompt('');
-  }, []);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(getStorageKey(userId));
+    }
+  }, [userId]);
 
   return {
     messages,
