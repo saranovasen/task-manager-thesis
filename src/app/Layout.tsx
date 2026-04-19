@@ -17,7 +17,7 @@ import './Layout.css';
 const SIDEBAR_WIDTH = 94;
 
 export const Layout = ({ children }: { children?: ReactNode }) => {
-  const { user, isAuthenticated, isLoading, login, register, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, isAuthActionLoading, login, register, logout } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [accountAnchorEl, setAccountAnchorEl] = useState<null | HTMLElement>(null);
   const userAvatarLetter = user?.email?.trim().charAt(0).toUpperCase() || 'U';
@@ -82,7 +82,7 @@ export const Layout = ({ children }: { children?: ReactNode }) => {
 
         <LoginDialog
           open={isLoginOpen}
-          loading={isLoading}
+          loading={isAuthActionLoading}
           onClose={() => setIsLoginOpen(false)}
           onLogin={login}
           onRegister={register}

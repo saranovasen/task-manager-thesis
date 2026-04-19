@@ -10,6 +10,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAuthActionLoading: boolean;
   accessToken: string | null;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(initialToken);
   const [isLoading, setIsLoading] = useState(Boolean(initialToken));
+  const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -53,26 +55,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   const login = async (payload: LoginPayload) => {
-    setIsLoading(true);
+    setIsAuthActionLoading(true);
     try {
       const response = await loginRequest(payload);
       setToken(response.accessToken);
       setUser(response.user);
       localStorage.setItem(TOKEN_KEY, response.accessToken);
     } finally {
-      setIsLoading(false);
+      setIsAuthActionLoading(false);
     }
   };
 
   const register = async (payload: RegisterPayload) => {
-    setIsLoading(true);
+    setIsAuthActionLoading(true);
     try {
       const response = await registerRequest(payload);
       setToken(response.accessToken);
       setUser(response.user);
       localStorage.setItem(TOKEN_KEY, response.accessToken);
     } finally {
-      setIsLoading(false);
+      setIsAuthActionLoading(false);
     }
   };
 
@@ -95,12 +97,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       isAuthenticated: Boolean(user),
       isLoading,
+      isAuthActionLoading,
       accessToken: token,
       login,
       register,
       logout,
     }),
-    [user, isLoading, token]
+    [user, isLoading, isAuthActionLoading, token]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
