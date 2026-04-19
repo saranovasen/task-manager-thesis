@@ -12,6 +12,35 @@ type LoginDialogProps = {
   onRegister: (payload: { name: string; email: string; password: string }) => Promise<void>;
 };
 
+const getAuthErrorMessage = (mode: AuthMode, error: ApiError): string => {
+  const normalizedMessage = error.message.toLowerCase();
+
+  const userNotFound =
+    error.status === 404 ||
+    normalizedMessage.includes('user not found') ||
+    normalizedMessage.includes('does not exist') ||
+    normalizedMessage.includes('не найден') ||
+    normalizedMessage.includes('не существует');
+
+  const userAlreadyExists =
+    error.status === 409 ||
+    normalizedMessage.includes('already exists') ||
+    normalizedMessage.includes('already registered') ||
+    normalizedMessage.includes('already in use') ||
+    normalizedMessage.includes('уже существует') ||
+    normalizedMessage.includes('уже зарегистрирован');
+
+  if (mode === 'login' && userNotFound) {
+    return 'Пользователь не найден. Пожалуйста, зарегистрируйтесь.';
+  }
+
+  if (mode === 'register' && userAlreadyExists) {
+    return 'Пользователь уже существует. Вы уже есть в системе.';
+  }
+
+  return error.message;
+};
+
 export const LoginDialog = ({ open, loading = false, onClose, onLogin, onRegister }: LoginDialogProps) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
@@ -68,7 +97,7 @@ export const LoginDialog = ({ open, loading = false, onClose, onLogin, onRegiste
       onClose();
     } catch (exception) {
       if (exception instanceof ApiError) {
-        setError(exception.message);
+        setError(getAuthErrorMessage(mode, exception));
         return;
       }
 
