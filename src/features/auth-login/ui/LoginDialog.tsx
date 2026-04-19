@@ -14,24 +14,46 @@ type LoginDialogProps = {
 
 const getAuthErrorMessage = (mode: AuthMode, error: ApiError): string => {
   const normalizedMessage = error.message.toLowerCase();
+  const detailsText =
+    typeof error.details === 'string'
+      ? error.details.toLowerCase()
+      : error.details && typeof error.details === 'object'
+        ? JSON.stringify(error.details).toLowerCase()
+        : '';
+
+  const combinedMessage = `${normalizedMessage} ${detailsText}`;
 
   const userNotFound =
     error.status === 404 ||
-    normalizedMessage.includes('user not found') ||
-    normalizedMessage.includes('does not exist') ||
-    normalizedMessage.includes('не найден') ||
-    normalizedMessage.includes('не существует');
+    combinedMessage.includes('user not found') ||
+    combinedMessage.includes('does not exist') ||
+    combinedMessage.includes('account not found') ||
+    combinedMessage.includes('не найден') ||
+    combinedMessage.includes('не существует');
+
+  const invalidCredentials =
+    error.status === 401 ||
+    combinedMessage.includes('invalid credentials') ||
+    combinedMessage.includes('invalid login') ||
+    combinedMessage.includes('unauthorized') ||
+    combinedMessage.includes('неверн');
 
   const userAlreadyExists =
     error.status === 409 ||
-    normalizedMessage.includes('already exists') ||
-    normalizedMessage.includes('already registered') ||
-    normalizedMessage.includes('already in use') ||
-    normalizedMessage.includes('уже существует') ||
-    normalizedMessage.includes('уже зарегистрирован');
+    combinedMessage.includes('already exists') ||
+    combinedMessage.includes('already registered') ||
+    combinedMessage.includes('already in use') ||
+    combinedMessage.includes('email is taken') ||
+    combinedMessage.includes('user exists') ||
+    combinedMessage.includes('уже существует') ||
+    combinedMessage.includes('уже зарегистрирован');
 
   if (mode === 'login' && userNotFound) {
     return 'Пользователь не найден. Пожалуйста, зарегистрируйтесь.';
+  }
+
+  if (mode === 'login' && invalidCredentials) {
+    return 'Пользователь не найден или указан неверный пароль. Если аккаунта нет, зарегистрируйтесь.';
   }
 
   if (mode === 'register' && userAlreadyExists) {
