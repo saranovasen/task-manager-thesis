@@ -87,8 +87,9 @@ export const LoginDialog = ({ open, loading = false, onClose, onLogin, onRegiste
 
   const handleSubmit = async () => {
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
 
-    if (!normalizedEmail || !password.trim()) {
+    if (!normalizedEmail || !normalizedPassword) {
       setError('Введите email и пароль');
       return;
     }
@@ -103,7 +104,7 @@ export const LoginDialog = ({ open, loading = false, onClose, onLogin, onRegiste
       return;
     }
 
-    if (password.trim().length < 6) {
+    if (normalizedPassword.length < 6) {
       setError('Пароль должен быть не короче 6 символов');
       return;
     }
@@ -112,9 +113,9 @@ export const LoginDialog = ({ open, loading = false, onClose, onLogin, onRegiste
 
     try {
       if (mode === 'register') {
-        await onRegister({ name: name.trim(), email: normalizedEmail, password });
+        await onRegister({ name: name.trim(), email: normalizedEmail, password: normalizedPassword });
       } else {
-        await onLogin({ email: normalizedEmail, password });
+        await onLogin({ email: normalizedEmail, password: normalizedPassword });
       }
       onClose();
     } catch (exception) {
